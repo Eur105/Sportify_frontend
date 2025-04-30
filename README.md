@@ -31,7 +31,7 @@ Sportify is a full-featured sports event management and facility booking app tai
 
 ### 🔙 Backend
 - **Node.js** with **Express.js**
-- **MongoDB** (NoSQL Database)
+- **Oracle SQL** (Database)
 
 ### 🛠 Tools & APIs
 - **RESTful APIs** for all backend interactions
