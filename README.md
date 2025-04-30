@@ -1,16 +1,39 @@
-# sportify_final
+# Sportify 🏀⚽🏸  
+**Your Ultimate Sports Booking & Management Platform**
 
-A new Flutter project.
+Sportify is a full-featured sports event management and facility booking app tailored for users in Pakistan. It allows players to book venues, join events, and track performance, while providing admins with real-time control over bookings, users, and system settings.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+### 👤 User App
+- **Venue Booking**: Search and book sports venues by location and time.
+- **Event Participation**: Join sports events or tournaments organized in your city.
+- **Tutorials & Nutrition**: Access fitness tutorials and nutrition guides.
+- **Leaderboard**: Compete and climb the rankings based on activity.
+- **Performance Tracking**: Track stats like game time, wins/losses, and improvements.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 🛠️ Admin Panel
+- **Real-Time Booking Approvals**: Approve/reject user bookings instantly.
+- **Booking Management**: View, filter, reallocate, or cancel bookings.
+- **User Management**: Monitor and manage user accounts and activity.
+- **Notifications**: Notify users on booking status and slot changes.
+- **Secure Login**: Admin-only access with backend API authentication.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 🧱 Tech Stack
+
+### 🖥 Frontend
+- **Flutter** (User & Admin App)
+- **Dart** (Mobile UI logic)
+
+### 🔙 Backend
+- **Node.js** with **Express.js**
+- **MongoDB** (NoSQL Database)
+
+### 🛠 Tools & APIs
+- **RESTful APIs** for all backend interactions
+- **Firebase** (for push notifications)
+- **JWT** for secure login sessions
