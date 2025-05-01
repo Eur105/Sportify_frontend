@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final Color backgroundGrey = const Color(0xFFF5F5F5);
   String fullName = "";
   String? profilePicturePath;
+  String username = "";
   String? userUuid;
 
   @override
@@ -37,6 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String firstName = prefs.getString('firstName') ?? '';
     final String lastName = prefs.getString('lastName') ?? '';
+    username = prefs.getString('userName') ?? "";
 
     setState(() {
       fullName = "${firstName.toUpperCase()} ${lastName.toUpperCase()}".trim();
@@ -70,11 +72,15 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (response.statusCode == 200) {
-        await prefs.clear();
+        // await prefs.clear();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const RolePage()),
         );
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        await prefs.remove('userUuid');
+        await prefs.clear();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Logout failed: ${response.body}")),
@@ -125,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: isSmallScreen ? 8 : 10), // Responsive spacing
                 Text(
-                  fullName.isNotEmpty ? fullName : "User",
+                  username.isNotEmpty ? username : "User",
                   style: TextStyle(
                       fontSize: isSmallScreen ? 18 : 20,
                       fontWeight: FontWeight.bold), // Responsive font size

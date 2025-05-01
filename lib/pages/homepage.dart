@@ -10,6 +10,7 @@ import 'package:sportify_final/pages/notification_page.dart';
 import 'package:sportify_final/pages/play_page.dart';
 import 'package:sportify_final/pages/utility/bottom_navbar.dart';
 import 'package:sportify_final/pages/utility/profile.dart';
+import 'package:sportify_final/pages/utility/usermanage.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -37,6 +38,7 @@ class _HomepageState extends State<Homepage> {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print(message);
     });
+    UserManager.loadUserId();
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print(message);
     });

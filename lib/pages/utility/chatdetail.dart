@@ -1,10 +1,14 @@
-// ignore_for_file: unused_element
+import 'dart:io';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/utility/chatservice.dart';
+import 'package:image_picker/image_picker.dart';
+//import 'package:file_picker/file_picker.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final String chatId;
@@ -25,9 +29,24 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
+  static String? currentUserId = "";
+  XFile? selectedImage;
+
+  static Future<void> _loadUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    currentUserId = prefs.getString("userUuid");
+    print("see uid in chatdetail page: $currentUserId");
+    //loadChats(); // assuming "uuid" is the key
+  }
 
   @override
+  void initState() {
+    super.initState();
+
+    _loadUserId();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -273,6 +292,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _showAttachmentOptions() {
+    XFile? selectedImage;
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -289,35 +309,50 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Add a variable to store the selected image file
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildAttachmentOption(
                     icon: Icons.photo,
                     label: 'Photo',
-                    onTap: () {
-                      // Implement photo sharing
-                      Navigator.pop(context);
+                    onTap: () async {
+                      final ImagePicker _picker = ImagePicker();
+                      // Pick an image from gallery
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        // Store the selected image
+                        setState(() {
+                          selectedImage = image;
+                        });
+                      }
+                      Navigator.pop(context); // Close the dialog
                     },
                   ),
                   _buildAttachmentOption(
                     icon: Icons.camera_alt,
                     label: 'Camera',
-                    onTap: () {
-                      // Implement camera
-                      Navigator.pop(context);
-                    },
-                  ),
-                  _buildAttachmentOption(
-                    icon: Icons.insert_drive_file,
-                    label: 'Document',
-                    onTap: () {
-                      // Implement document sharing
-                      Navigator.pop(context);
+                    onTap: () async {
+                      final ImagePicker _picker = ImagePicker();
+                      // Pick an image using the camera
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.camera);
+                      if (image != null) {
+                        // Store the captured image
+                        setState(() {
+                          selectedImage = image;
+                        });
+                      }
+                      Navigator.pop(context); // Close the dialog
                     },
                   ),
                 ],
               ),
+
+// Display the selected image if available
+              if (selectedImage != null) Image.file(File(selectedImage!.path)),
             ],
           ),
         );
@@ -333,20 +368,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Icon(
-              icon,
-              size: 30,
-              color: Colors.green,
-            ),
-          ),
-          const SizedBox(height: 8),
+          Icon(icon, size: 30),
+          const SizedBox(height: 5),
           Text(label),
         ],
       ),
@@ -476,21 +501,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     _showAddMembersDialog();
                   },
                 ),
-              ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
-                title: const Text('Clear chat history'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showClearChatConfirmation();
-                },
-              ),
-              if (!widget.isGroup)
+              if (widget.isGroup)
                 ListTile(
-                  leading: Icon(Icons.block, color: Colors.orange),
-                  title: const Text('Block user'),
+                  leading: const Icon(Icons.person_remove, color: Colors.red),
+                  title: const Text('Remove a member'),
                   onTap: () {
                     Navigator.pop(context);
-                    _showBlockUserConfirmation();
+                    _showRemoveMemberConfirmation();
                   },
                 ),
             ],
@@ -500,88 +517,286 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  void _showAddMembersDialog() {
+  void _showRemoveMemberConfirmation() async {
+    try {
+      // Get group data to check who's the admin
+      DocumentSnapshot chatDoc = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .get();
+
+      if (!chatDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Group not found')),
+        );
+        return;
+      }
+
+      Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+      String createdBy = chatData['createdBy'] ?? '';
+      List<dynamic> participants = chatData['participants'] ?? [];
+
+      // Check if current user is admin
+      if (createdBy != currentUserId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Only the admin can remove members')),
+        );
+        return;
+      }
+
+      // Get members info for display
+      List<Map<String, dynamic>> membersInfo =
+          await _getGroupMembersInfo(participants.cast<String>());
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Remove Member'),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 300,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: membersInfo.length,
+                itemBuilder: (context, index) {
+                  var member = membersInfo[index];
+                  String memberId = member['id'];
+
+                  // Don't show the current user (admin) in the list
+                  if (memberId == currentUserId) return Container();
+
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: member['photoUrl'] != null &&
+                              member['photoUrl'].isNotEmpty
+                          ? NetworkImage(member['photoUrl'])
+                          : const AssetImage("assets/profile.png")
+                              as ImageProvider,
+                    ),
+                    title: Text(member['name'] ?? 'Unknown User'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _removeMemberFromGroup(memberId);
+                    },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Error showing remove member dialog: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+// Now, let's implement the _removeMemberFromGroup function
+  Future<void> _removeMemberFromGroup(String memberId) async {
+    try {
+      // Get the current list of participants
+      DocumentSnapshot chatDoc = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .get();
+
+      if (!chatDoc.exists) return;
+
+      Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+      List<dynamic> participants = List.from(chatData['participants'] ?? []);
+
+      // Remove the member
+      participants.remove(memberId);
+
+      // Update the chat document
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .update({
+        'participants': participants,
+      });
+
+      // Add a system message
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(memberId)
+          .get();
+
+      String userName = 'Unknown User';
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        userName = userData['name'] ?? 'Unknown User';
+      }
+
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add({
+        'senderId': 'system',
+        'text': '$userName was removed from the group',
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Member removed successfully')),
+      );
+    } catch (e) {
+      print('Error removing member: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove member: $e')),
+      );
+    }
+  }
+
+// Let's improve the add members dialog with search functionality
+  void _showAddMembersDialog() async {
+    TextEditingController searchController = TextEditingController();
+    List<String> selectedUsers = [];
+    List<QueryDocumentSnapshot> allUsers = [];
+    List<QueryDocumentSnapshot> filteredUsers = [];
+
+    // Get the current participants to exclude them
+    DocumentSnapshot chatDoc = await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(widget.chatId)
+        .get();
+
+    List<String> currentParticipants = [];
+    if (chatDoc.exists) {
+      Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+      currentParticipants = List<String>.from(chatData['participants'] ?? []);
+    }
+
+    // Get all users
+    QuerySnapshot usersSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    allUsers = usersSnapshot.docs;
+
+    // Initial filtered list (exclude current participants)
+    filteredUsers = allUsers.where((doc) {
+      String userId = doc.id;
+      return !currentParticipants.contains(userId) && userId != currentUserId;
+    }).toList();
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Add Members'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: FutureBuilder<QuerySnapshot>(
-              future: FirebaseFirestore.instance.collection('users').get(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Filter function
+            void filterUsers(String query) {
+              setState(() {
+                if (query.isEmpty) {
+                  filteredUsers = allUsers.where((doc) {
+                    String userId = doc.id;
+                    return !currentParticipants.contains(userId) &&
+                        userId != currentUserId;
+                  }).toList();
+                } else {
+                  filteredUsers = allUsers.where((doc) {
+                    String userId = doc.id;
+                    if (currentParticipants.contains(userId) ||
+                        userId == currentUserId) {
+                      return false;
+                    }
+
+                    Map<String, dynamic> userData =
+                        doc.data() as Map<String, dynamic>;
+                    String userName = userData['name'] ?? '';
+                    return userName.toLowerCase().contains(query.toLowerCase());
+                  }).toList();
                 }
+              });
+            }
 
-                return StatefulBuilder(
-                  builder: (context, setState) {
-                    // Get current chat participants
-                    List<String> selectedUsers = [];
+            return AlertDialog(
+              title: const Text('Add Members'),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: Column(
+                  children: [
+                    // Search box
+                    TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Search by name',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: filterUsers,
+                    ),
+                    const SizedBox(height: 10),
+                    // User list
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: filteredUsers.length,
+                        itemBuilder: (context, index) {
+                          var userDoc = filteredUsers[index];
+                          var userData = userDoc.data() as Map<String, dynamic>;
+                          var userId = userDoc.id;
+                          var userName = userData['name'] ?? 'Unknown User';
 
-                    return Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) {
-                              var userDoc = snapshot.data!.docs[index];
-                              var userData =
-                                  userDoc.data() as Map<String, dynamic>;
-                              var userId = userDoc.id;
+                          bool isSelected = selectedUsers.contains(userId);
 
-                              // Skip current user
-                              if (userId == currentUserId) return Container();
-
-                              bool isSelected = selectedUsers.contains(userId);
-
-                              return CheckboxListTile(
-                                value: isSelected,
-                                onChanged: (value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      selectedUsers.add(userId);
-                                    } else {
-                                      selectedUsers.remove(userId);
-                                    }
-                                  });
-                                },
-                                title: Text(userData['name'] ?? 'Unknown User'),
-                                secondary: CircleAvatar(
-                                  backgroundImage: userData['photoUrl'] !=
-                                              null &&
-                                          userData['photoUrl'].isNotEmpty
-                                      ? NetworkImage(userData['photoUrl'])
-                                      : const AssetImage("assets/profile.png")
-                                          as ImageProvider,
-                                ),
-                              );
+                          return CheckboxListTile(
+                            value: isSelected,
+                            onChanged: (value) {
+                              setState(() {
+                                if (value == true) {
+                                  selectedUsers.add(userId);
+                                } else {
+                                  selectedUsers.remove(userId);
+                                }
+                              });
                             },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Get the list of selected users and add them to the group
-                Navigator.pop(context);
-                // _addMembersToGroup(selectedUsers);
-              },
-              child: const Text('Add'),
-            ),
-          ],
+                            title: Text(userName),
+                            secondary: CircleAvatar(
+                              backgroundImage: userData['photoUrl'] != null &&
+                                      userData['photoUrl'].isNotEmpty
+                                  ? NetworkImage(userData['photoUrl'])
+                                  : const AssetImage("assets/profile.png")
+                                      as ImageProvider,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Selected count
+                    Text(
+                      '${selectedUsers.length} users selected',
+                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: selectedUsers.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _addMembersToGroup(selectedUsers);
+                        },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -606,136 +821,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       print('Error adding members: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add members: $e')),
-      );
-    }
-  }
-
-  void _showClearChatConfirmation() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Clear Chat History'),
-          content: const Text(
-              'Are you sure you want to clear all messages? This cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _clearChatHistory();
-              },
-              child: const Text('Clear', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _clearChatHistory() async {
-    try {
-      // Get all messages
-      QuerySnapshot messagesSnapshot = await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(widget.chatId)
-          .collection('messages')
-          .get();
-
-      // Delete each message
-      WriteBatch batch = FirebaseFirestore.instance.batch();
-      for (var doc in messagesSnapshot.docs) {
-        batch.delete(doc.reference);
-      }
-      await batch.commit();
-
-      // Update chat document
-      await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(widget.chatId)
-          .update({
-        'lastMessage': 'No messages',
-        'lastMessageTime': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chat history cleared')),
-      );
-    } catch (e) {
-      print('Error clearing chat history: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to clear chat history: $e')),
-      );
-    }
-  }
-
-  void _showBlockUserConfirmation() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Block User'),
-          content: const Text(
-              'Are you sure you want to block this user? You will no longer receive messages from them.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _blockUser();
-              },
-              child: const Text('Block', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _blockUser() async {
-    try {
-      // Get other user ID
-      DocumentSnapshot chatDoc = await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(widget.chatId)
-          .get();
-
-      if (chatDoc.exists) {
-        Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
-        List<dynamic> participants = chatData['participants'] ?? [];
-
-        String otherUserId = participants
-            .firstWhere((id) => id != currentUserId, orElse: () => '');
-
-        if (otherUserId.isNotEmpty) {
-          // Add to blocked users collection
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUserId)
-              .collection('blocked')
-              .doc(otherUserId)
-              .set({
-            'blockedAt': FieldValue.serverTimestamp(),
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User blocked')),
-          );
-
-          // Go back to chat list
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      print('Error blocking user: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to block user: $e')),
       );
     }
   }

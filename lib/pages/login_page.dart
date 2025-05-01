@@ -56,6 +56,7 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setInt('userId', user['id']);
         await prefs.setString('userUuid', user['uuid']);
         await prefs.setString('firstName', user['firstName']);
+        await prefs.setString('userName', user['userName']);
         await prefs.setString('lastName', user['lastName']);
         await prefs.setString('phoneNo', user['phoneNo']);
         await prefs.setString('role', user['role']);

@@ -1,8 +1,8 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, unused_element, avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/notification_page.dart';
@@ -35,26 +35,18 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     UserManager.setupPresence();
     _loadUserId();
-    loadChats();
-
-    // Listen for auth state changes
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user != null && user.uid != currentUserId) {
-        setState(() {
-          currentUserId = user.uid;
-          print("user.uid value: ${user.uid}");
-        });
-        loadChats();
-      }
-    });
   }
 
   Future<void> _loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     currentUserId = prefs.getString("userUuid");
-    print("see uid: $currentUserId");
-    //loadChats(); // assuming "uuid" is the key
+    print("see uid in chatpage: $currentUserId");
+    ChatService.hello(currentUserId!);
+    print("sent uid in chatpage: $currentUserId");
+    loadChats();
+
+    // assuming "uuid" is the key
   }
 
   Future<void> loadChats() async {
@@ -78,6 +70,7 @@ class _ChatPageState extends State<ChatPage> {
           if (otherUserId.isNotEmpty) {
             // Get user data using UserManager
             var userData = await UserManager.getUserData(otherUserId);
+            print("Other user id: $otherUserId");
             if (userData != null) {
               tempDms.add({
                 'id': doc.id,
@@ -128,60 +121,60 @@ class _ChatPageState extends State<ChatPage> {
 
   // Other methods similarly refactored...
 
-  void processChats(QuerySnapshot snapshot) async {
-    List<Map<String, dynamic>> tempDms = [];
-    List<Map<String, dynamic>> tempGroups = [];
+  // void processChats(QuerySnapshot snapshot) async {
+  //   List<Map<String, dynamic>> tempDms = [];
+  //   List<Map<String, dynamic>> tempGroups = [];
 
-    for (var doc in snapshot.docs) {
-      var chatData = doc.data() as Map<String, dynamic>;
-      String chatType = chatData['type'] ?? 'direct';
+  //   for (var doc in snapshot.docs) {
+  //     var chatData = doc.data() as Map<String, dynamic>;
+  //     String chatType = chatData['type'] ?? 'direct';
 
-      if (chatType == 'direct') {
-        // Process direct messages
-        String otherUserId = (chatData['participants'] as List)
-            .firstWhere((id) => id != currentUserId, orElse: () => '');
+  //     if (chatType == 'direct') {
+  //       // Process direct messages
+  //       String otherUserId = (chatData['participants'] as List)
+  //           .firstWhere((id) => id != currentUserId, orElse: () => '');
 
-        if (otherUserId.isNotEmpty) {
-          try {
-            var userDoc = await FirebaseFirestore.instance
-                .collection('users')
-                .doc(otherUserId)
-                .get();
+  //       if (otherUserId.isNotEmpty) {
+  //         try {
+  //           var userDoc = await FirebaseFirestore.instance
+  //               .collection('users')
+  //               .doc(otherUserId)
+  //               .get();
 
-            if (userDoc.exists) {
-              var userData = userDoc.data() as Map<String, dynamic>;
-              tempDms.add({
-                'id': doc.id,
-                'name': userData['name'] ?? 'Unknown User',
-                'message': chatData['lastMessage'] ?? 'Start a conversation',
-                'photoUrl': userData['photoUrl'] ?? '',
-                'timestamp': chatData['lastMessageTime'],
-              });
-            }
-          } catch (e) {
-            print('Error getting user data: $e');
-          }
-        }
-      } else if (chatType == 'group') {
-        // Process group chats
-        tempGroups.add({
-          'id': doc.id,
-          'name': chatData['name'] ?? 'Unnamed Group',
-          'message': chatData['lastMessage'] ?? 'No messages yet',
-          'photoUrl': chatData['photoUrl'] ?? '',
-          'timestamp': chatData['lastMessageTime'],
-        });
-      }
-    }
+  //           if (userDoc.exists) {
+  //             var userData = userDoc.data() as Map<String, dynamic>;
+  //             tempDms.add({
+  //               'id': doc.id,
+  //               'name': userData['name'] ?? 'Unknown User',
+  //               'message': chatData['lastMessage'] ?? 'Start a conversation',
+  //               'photoUrl': userData['photoUrl'] ?? '',
+  //               'timestamp': chatData['lastMessageTime'],
+  //             });
+  //           }
+  //         } catch (e) {
+  //           print('Error getting user data: $e');
+  //         }
+  //       }
+  //     } else if (chatType == 'group') {
+  //       // Process group chats
+  //       tempGroups.add({
+  //         'id': doc.id,
+  //         'name': chatData['name'] ?? 'Unnamed Group',
+  //         'message': chatData['lastMessage'] ?? 'No messages yet',
+  //         'photoUrl': chatData['photoUrl'] ?? '',
+  //         'timestamp': chatData['lastMessageTime'],
+  //       });
+  //     }
+  //   }
 
-    setState(() {
-      dms = tempDms;
-      groups = tempGroups;
-    });
-  }
+  //   setState(() {
+  //     dms = tempDms;
+  //     groups = tempGroups;
+  //   });
+  // }
 
   Stream<QuerySnapshot> _chatStream() {
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+    final userId = currentUserId;
     return FirebaseFirestore.instance
         .collection('chats')
         .where('participants', arrayContains: userId)
@@ -329,22 +322,71 @@ class _ChatPageState extends State<ChatPage> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Create New Group'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: groupNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Group Name',
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: groupNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Group Name',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Here you would normally show a list of users to select
-                  // For simplicity we're just using a placeholder
-                  const Text('Select members:'),
-                  // In a real app, replace this with a user selection list
-                  const Text('(User selection would go here)'),
-                ],
+                    const SizedBox(height: 10),
+                    const Text('Select members:'),
+                    const SizedBox(height: 10),
+                    // 👇 Fetch users from database or service
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: UserManager
+                          .getAllUsers(), // Replace with your actual method
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return const Text('Error loading users');
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Text('No users found');
+                        }
+
+                        final users = snapshot.data!;
+
+                        return SizedBox(
+                          height: 200,
+                          width: double.maxFinite,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: users.length,
+                            itemBuilder: (context, index) {
+                              final user = users[index];
+                              final isSelected =
+                                  selectedUsers.contains(user['id']);
+
+                              return CheckboxListTile(
+                                title: Text(user['name'] ?? 'No Name'),
+                                secondary: CircleAvatar(
+                                  backgroundImage:
+                                      NetworkImage(user['photoUrl'] ?? ''),
+                                ),
+                                value: isSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      selectedUsers.add(user['id']);
+                                    } else {
+                                      selectedUsers.remove(user['id']);
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -353,10 +395,16 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    if (groupNameController.text.isNotEmpty) {
-                      // In a real app, selectedUsers would come from UI selection
+                    if (groupNameController.text.isNotEmpty &&
+                        selectedUsers.isNotEmpty) {
                       createNewGroup(groupNameController.text, selectedUsers);
                       Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Please enter a group name and select members')),
+                      );
                     }
                   },
                   child: const Text('Create'),
@@ -513,6 +561,8 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
               onChanged: (value) {
+                // Navigator.push(context,
+                //     MaterialPageRoute(builder: (context) => SearchUsersPage()));
                 // Implement search functionality here
               },
             ),
@@ -520,35 +570,8 @@ class _ChatPageState extends State<ChatPage> {
           SizedBox(height: isSmallScreen ? 8 : 10), // Responsive spacing
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: Text("No chats yet"))
                 : _buildChatList(showDms ? dms : groups),
-          ),
-          Visibility(
-            visible: currentChatId.isNotEmpty,
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: messageController,
-                      decoration: InputDecoration(
-                        hintText: "Type a message...",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: isSmallScreen ? 8 : 10), // Responsive spacing
-                  FloatingActionButton(
-                    onPressed: sendMessage,
-                    backgroundColor: Colors.green,
-                    child: const Icon(Icons.send, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -582,21 +605,30 @@ class _ChatPageState extends State<ChatPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "No chats yet!",
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                if (showDms) {
-                  _showNewChatDialog();
+            FutureBuilder<bool>(
+              future: Future.delayed(const Duration(seconds: 2), () => true),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 } else {
-                  _showCreateGroupDialog();
+                  return const Text(
+                    "No chats yet!",
+                    style: TextStyle(fontSize: 16),
+                  );
                 }
               },
-              child: Text(showDms ? "Start a new chat" : "Create a group"),
             ),
+            const SizedBox(height: 10),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     if (showDms) {
+            //       _showNewChatDialog();
+            //     } else {
+            //       _showCreateGroupDialog();
+            //     }
+            //   },
+            //   child: Text(showDms ? "Start a new chat" : "Create a group"),
+            // ),
           ],
         ),
       );
@@ -605,38 +637,77 @@ class _ChatPageState extends State<ChatPage> {
     return ListView.builder(
       itemCount: chatData.length,
       itemBuilder: (context, index) {
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: chatData[index]["photoUrl"] != null &&
-                    chatData[index]["photoUrl"].isNotEmpty
-                ? NetworkImage(chatData[index]["photoUrl"])
-                : const AssetImage("assets/profile.png") as ImageProvider,
-          ),
-          title: Text(chatData[index]["name"] ?? ""),
-          subtitle: Text(chatData[index]["message"] ?? ""),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {
-            setState(() {
-              currentChatId = chatData[index]["id"];
-            });
+        // First, check if the chat document exists in Firestore
+        return FutureBuilder<bool>(
+          future: _checkChatExists(chatData[index]["id"]),
+          builder: (context, snapshot) {
+            // If we're still checking, show a placeholder or loading indicator
+            // if (snapshot.connectionState == ConnectionState.waiting) {
+            //   return const ListTile(
+            //     title: Text("Loading..."),
+            //     leading: CircleAvatar(
+            //         child: CircularProgressIndicator(strokeWidth: 2)),
+            //   );
+            // }
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatDetailPage(
-                  chatId: chatData[index]["id"],
-                  chatName: chatData[index]["name"],
-                  isGroup: !showDms, // Add this parameter
-                ),
+            // If the chat doesn't exist, don't show anything
+            if (snapshot.data == false) {
+              return const SizedBox.shrink();
+            }
+
+            // If the chat exists, show the ListTile
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundImage: chatData[index]["photoUrl"] != null &&
+                        chatData[index]["photoUrl"].isNotEmpty
+                    ? NetworkImage(chatData[index]["photoUrl"])
+                    : const AssetImage("assets/profile.png") as ImageProvider,
               ),
-            ).then((_) {
-              // This ensures state is refreshed when returning from ChatDetailPage
-              loadChats();
-            });
+              title: Text(chatData[index]["name"] ?? ""),
+              subtitle: Text(chatData[index]["message"] ?? ""),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                setState(() {
+                  currentChatId = chatData[index]["id"];
+                });
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatDetailPage(
+                      chatId: chatData[index]["id"],
+                      chatName: chatData[index]["name"],
+                      isGroup: !showDms, // Add this parameter
+                    ),
+                  ),
+                ).then((_) {
+                  // This ensures state is refreshed when returning from ChatDetailPage
+                  loadChats();
+                });
+              },
+            );
           },
         );
       },
     );
+  }
+
+  // Add this function to your class
+  Future<bool> _checkChatExists(String chatId) async {
+    try {
+      // Get a reference to the chat document
+      final chatDoc = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .get();
+
+      // Return true if the document exists
+      return chatDoc.exists;
+    } catch (e) {
+      print('Error checking if chat exists: $e');
+      // Return false if there was an error
+      return false;
+    }
   }
 
   @override

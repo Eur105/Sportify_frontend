@@ -60,6 +60,7 @@ class _SplashPageState extends State<SplashPage>
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    print("Token is : $token");
 
     if (token != null && token.isNotEmpty) {
       // Token exists, navigate to Homepage

@@ -1,22 +1,22 @@
 // ignore_for_file: prefer_conditional_assignment, unnecessary_null_comparison, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseStorage _storage = FirebaseStorage.instance;
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+
   // String? currentId;
   static String currentUserId = "";
 
   static String hello(String id) {
     currentUserId = id;
-    print("currenttt: $currentUserId");
+    print("uid in chatservice page: $currentUserId");
     return currentUserId;
   }
 
@@ -213,69 +213,69 @@ class ChatService {
   static Future<bool> addMembersToGroup(
       String chatId, List<String> newMemberIds) async {
     try {
-      // Get current members
+      // Get current chat data
       DocumentSnapshot chatDoc =
           await _firestore.collection('chats').doc(chatId).get();
 
-      if (chatDoc.exists) {
-        Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+      if (!chatDoc.exists) {
+        return false;
+      }
 
-        // Check if it's a group chat
-        if (chatData['type'] != 'group') {
-          return false;
+      Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+      List<dynamic> currentParticipants = chatData['participants'] ?? [];
+
+      // Convert to List<String> for type safety
+      List<String> participants = currentParticipants.cast<String>();
+
+      // Filter out users who are already in the group
+      List<String> membersToAdd =
+          newMemberIds.where((id) => !participants.contains(id)).toList();
+
+      if (membersToAdd.isEmpty) {
+        return false; // No new members to add
+      }
+
+      // Add the new members to the group
+      participants.addAll(membersToAdd);
+
+      // Update the chat document
+      await _firestore.collection('chats').doc(chatId).update({
+        'participants': participants,
+      });
+
+      // Create a batch to add system messages for each new member
+      WriteBatch batch = _firestore.batch();
+
+      for (String memberId in membersToAdd) {
+        // Get member name
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(memberId).get();
+
+        String memberName = 'Unknown User';
+        if (userDoc.exists) {
+          Map<String, dynamic> userData =
+              userDoc.data() as Map<String, dynamic>;
+          memberName = userData['name'] ?? 'Unknown User';
         }
 
-        // Check if 'participants' is not null and is a list
-        List<dynamic> currentParticipants = chatData['participants'] ?? [];
-
-        // If participants is null or not present, initialize it as an empty list
-        if (currentParticipants == null) {
-          currentParticipants = [];
-        }
-
-        List<String> addedMembers = [];
-
-        // Add new members
-        for (String userId in newMemberIds) {
-          if (!currentParticipants.contains(userId)) {
-            currentParticipants.add(userId);
-            addedMembers.add(userId);
-          }
-        }
-
-        if (addedMembers.isEmpty) {
-          return false; // No new members to add
-        }
-
-        // Update chat document
-        await _firestore.collection('chats').doc(chatId).update({
-          'participants': currentParticipants,
-        });
-
-        // Add system message
-        List<String> addedNames = [];
-        for (String userId in addedMembers) {
-          String name = await _getUserName(userId);
-          addedNames.add(name);
-        }
-
-        String addedMembersText = addedNames.join(', ');
-        await _firestore
+        // Create system message
+        DocumentReference msgRef = _firestore
             .collection('chats')
             .doc(chatId)
             .collection('messages')
-            .add({
+            .doc();
+
+        batch.set(msgRef, {
           'senderId': 'system',
-          'text': '$addedMembersText added to the group',
+          'text': '$memberName was added to the group',
           'timestamp': FieldValue.serverTimestamp(),
           'read': false,
-          'type': 'system',
         });
-
-        return true;
       }
 
-      return false;
+      await batch.commit();
+
+      return true;
     } catch (e) {
       print('Error adding members to group: $e');
       return false;

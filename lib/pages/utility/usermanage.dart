@@ -1,23 +1,26 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, unused_element
 
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserManager {
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  //static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static String? currentUserId = "";
+
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Get the current user's ID
-  static String get currentUserId => _auth.currentUser?.uid ?? '';
+  static Future<void> loadUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  // Check if user is logged in
-  static bool get isLoggedIn => _auth.currentUser != null;
+    currentUserId = prefs.getString("userUuid");
+    print("see uid in user manager page: $currentUserId");
+    //loadChats(); // assuming "uuid" is the key
+  }
 
   // Get current user data
-  static Future<Map<String, dynamic>?> getCurrentUserData() async {
-    if (!isLoggedIn) return null;
-
+  Future<Map<String, dynamic>?> getCurrentUserData() async {
     try {
       DocumentSnapshot doc =
           await _firestore.collection('users').doc(currentUserId).get();
@@ -37,8 +40,6 @@ class UserManager {
     String? photoUrl,
     String? bio,
   }) async {
-    if (!isLoggedIn) return false;
-
     try {
       Map<String, dynamic> updateData = {};
       if (name != null) updateData['name'] = name;
@@ -93,8 +94,6 @@ class UserManager {
 
   // Check if a user is blocked
   static Future<bool> isUserBlocked(String userId) async {
-    if (!isLoggedIn) return false;
-
     try {
       DocumentSnapshot doc = await _firestore
           .collection('users')
@@ -112,7 +111,7 @@ class UserManager {
 
   // Block a user
   static Future<bool> blockUser(String userId) async {
-    if (!isLoggedIn) return false;
+    //if (!isLoggedIn) return false;
 
     try {
       await _firestore
@@ -132,7 +131,7 @@ class UserManager {
 
   // Unblock a user
   static Future<bool> unblockUser(String userId) async {
-    if (!isLoggedIn) return false;
+    //if (!isLoggedIn) return false;
 
     try {
       await _firestore
@@ -150,7 +149,7 @@ class UserManager {
 
   // Get blocked users
   static Future<List<String>> getBlockedUsers() async {
-    if (!isLoggedIn) return [];
+    //if (!isLoggedIn) return [];
 
     try {
       QuerySnapshot snapshot = await _firestore
@@ -168,7 +167,7 @@ class UserManager {
 
   // Update online status
   static Future<void> updateOnlineStatus(bool isOnline) async {
-    if (!isLoggedIn) return;
+    // if (!isLoggedIn) return;
 
     try {
       await _firestore.collection('users').doc(currentUserId).update({
@@ -186,11 +185,11 @@ class UserManager {
     updateOnlineStatus(true);
 
     // Add listener for when app goes to background or is closed
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-        // User signed out, update status
-        updateOnlineStatus(false);
-      }
-    });
+    // FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    //   if (user == null) {
+    //     // User signed out, update status
+    //     updateOnlineStatus(false);
+    //   }
+    // });
   }
 }

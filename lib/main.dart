@@ -22,6 +22,7 @@ import 'package:sportify_final/pages/utility/socket.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:sportify_final/pages/utility/usermanage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,7 +96,7 @@ class _MyAppState extends State<MyApp> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             NotificationManager().initialize(context);
           });
-          return SplashPage(); // Splash/Login
+          return RolePage(); // Splash/Login
         },
       ),
     );

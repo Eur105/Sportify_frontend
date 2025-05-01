@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +25,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _lastnameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
   bool _isMinLengthValid = false;
   bool _hasNumber = false;
@@ -74,7 +75,8 @@ class _SignupPageState extends State<SignupPage> {
           'email': _emailController.text,
           'phoneNo': _phoneController.text,
           'password': _passwordController.text,
-          'confirmPassword': _confirmPasswordController.text
+          'confirmPassword': _confirmPasswordController.text,
+          'userName': _usernameController.text,
         }),
       );
 
@@ -149,6 +151,13 @@ class _SignupPageState extends State<SignupPage> {
                   decoration: const InputDecoration(
                       labelText: "Last Name", border: OutlineInputBorder()),
                   validator: (value) => _validateName(value, "Last Name"),
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                      labelText: "User Name", border: OutlineInputBorder()),
+                  // validator: (value) => _validateName(value, "First Name"),
                 ),
                 SizedBox(height: 16),
                 TextFormField(
