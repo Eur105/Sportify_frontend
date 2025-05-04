@@ -24,6 +24,7 @@ class _BookingPageState extends State<BookingPage> {
   final TextEditingController timeSlotController = TextEditingController();
   final TextEditingController startTimeController = TextEditingController();
   final TextEditingController endTimeController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
   String _formattedTimeSlot = "";
   bool isBooking = false;
   int price = 0;
@@ -338,6 +339,17 @@ class _BookingPageState extends State<BookingPage> {
                 onChanged: (value) {
                   setState(() {
                     venueController.text = value ?? "";
+
+                    // Set price based on selected venue
+                    if (value == "Umar Minhas futsal ground") {
+                      priceController.text = "5000";
+                    } else if (value == "Kokan ground") {
+                      priceController.text = "4000";
+                    } else if (value == "spiritfield ground") {
+                      priceController.text = "3500";
+                    } else {
+                      priceController.text = "";
+                    }
                   });
                 },
                 decoration: const InputDecoration(
@@ -345,7 +357,19 @@ class _BookingPageState extends State<BookingPage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: isSmallScreen ? 15 : 20), // Responsive spacing
+              SizedBox(height: isSmallScreen ? 15 : 20),
+
+              TextField(
+                controller: priceController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: "Price per Hour",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              SizedBox(height: isSmallScreen ? 15 : 20),
+              // Responsive spacing
               Row(
                 children: [
                   Expanded(

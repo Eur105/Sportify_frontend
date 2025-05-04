@@ -176,6 +176,7 @@ class ChatService {
       if (!memberIds.contains(currentUserId)) {
         memberIds.add(currentUserId);
       }
+      String creatorname = await _getUserName(currentUserId);
 
       // Create new group chat
       DocumentReference chatRef = await _firestore.collection('chats').add({
@@ -300,6 +301,8 @@ class ChatService {
 
         List<dynamic> currentParticipants = chatData['participants'] ?? [];
 
+        String name = await _getUserName(memberId);
+
         // Remove member
         if (currentParticipants.contains(memberId)) {
           currentParticipants.remove(memberId);
@@ -316,7 +319,7 @@ class ChatService {
               .doc(chatId)
               .collection('messages')
               .add({
-            'senderId': 'system',
+            'senderId': 'admin',
             'text': '$name removed from the group',
             'timestamp': FieldValue.serverTimestamp(),
             'read': false,
@@ -395,7 +398,7 @@ class ChatService {
   // Helper method to get user name
   static Future<String> _getUserName(String userId) async {
     try {
-      if (userId == 'system') return 'System';
+      if (userId == 'system' || userId == 'admin') return 'System';
 
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(userId).get();
@@ -409,6 +412,31 @@ class ChatService {
     } catch (e) {
       print('Error getting user name: $e');
       return 'Unknown User';
+    }
+  }
+
+  static Future<String?> getExistingDirectChatId(
+      String userId, String otherUserId) async {
+    try {
+      // Query chats where the current user is a participant
+      QuerySnapshot userChatsSnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .where('type', isEqualTo: 'direct')
+          .where('participants', arrayContains: userId)
+          .get();
+
+      // Check each chat if the other user is also a participant
+      for (var doc in userChatsSnapshot.docs) {
+        List<dynamic> participants =
+            (doc.data() as Map<String, dynamic>)['participants'] ?? [];
+        if (participants.contains(otherUserId)) {
+          return doc.id; // Return the chat ID if it exists
+        }
+      }
+      return null; // Return null if no chat exists between these users
+    } catch (e) {
+      print('Error checking for existing chat: $e');
+      return null;
     }
   }
 }

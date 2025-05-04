@@ -572,6 +572,21 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   Widget _buildGamesTab() {
+    final now = DateTime.now();
+
+// Filter games whose date has not passed
+    final upcomingGames = publicGames.where((game) {
+      final gameDateStr = game["gameDate"];
+      if (gameDateStr == null) return false;
+
+      try {
+        final gameDate = DateTime.parse(gameDateStr);
+        return gameDate.isAfter(now) || _isSameDay(gameDate, now);
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+
     return Column(
       children: [
         // 🔍 Search Bar
@@ -612,9 +627,9 @@ class _PlayPageState extends State<PlayPage> {
                   ),
                 )
               : ListView.builder(
-                  itemCount: publicGames.length,
+                  itemCount: upcomingGames.length,
                   itemBuilder: (context, index) {
-                    final game = publicGames[index];
+                    final game = upcomingGames[index];
                     final String? uu = game["uuid"];
                     print(uu);
 
@@ -904,7 +919,26 @@ class _PlayPageState extends State<PlayPage> {
     }
   }
 
+  bool _isSameDay(DateTime d1, DateTime d2) {
+    return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+  }
+
   Widget _buildMySportsTab() {
+    final now = DateTime.now();
+
+// Filter games whose date has not passed
+    final upcomingGames = privateGames.where((game) {
+      final gameDateStr = game["gameDate"];
+      if (gameDateStr == null) return false;
+
+      try {
+        final gameDate = DateTime.parse(gameDateStr);
+        return gameDate.isAfter(now) || _isSameDay(gameDate, now);
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+
     return Column(
       children: [
         Row(
@@ -944,9 +978,9 @@ class _PlayPageState extends State<PlayPage> {
                   ),
                 )
               : ListView.builder(
-                  itemCount: privateGames.length,
+                  itemCount: upcomingGames.length,
                   itemBuilder: (context, index) {
-                    final game = privateGames[index];
+                    final game = upcomingGames[index];
                     final String? uu = game["uuid"];
 
                     return InkWell(

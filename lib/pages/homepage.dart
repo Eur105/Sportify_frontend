@@ -1,16 +1,18 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, deprecated_member_use, annotate_overrides, avoid_print, sized_box_for_whitespace
+// ignore_for_file: prefer_const_constructors, unused_local_variable
 
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sportify_final/pages/booking_page.dart';
 import 'package:sportify_final/pages/chat_page.dart';
-import 'package:sportify_final/pages/create_game.dart';
+
 import 'package:sportify_final/pages/learn_page.dart';
 import 'package:sportify_final/pages/notification_page.dart';
 import 'package:sportify_final/pages/play_page.dart';
 import 'package:sportify_final/pages/utility/bottom_navbar.dart';
 import 'package:sportify_final/pages/utility/profile.dart';
-import 'package:sportify_final/pages/utility/usermanage.dart';
+//import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -22,8 +24,10 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   final Color backgroundGrey = const Color(0xFFF5F5F5);
   String gameStatus = 'Start Playing'; // Default status for start playing
-  String gameCalendarStatus =
-      'No games in your calendar'; // Default for calendar
+  String gameCalendarStatus = 'No games in your calendar';
+  late final PageController _pageController;
+  int _currentPage = 0;
+  late List<Map<String, String>> _promoCards; // Default for calendar
 
   // Function to update the game status when a game is created
   void createGame() {
@@ -35,13 +39,49 @@ class _HomepageState extends State<Homepage> {
 
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.9);
+    _promoCards = [
+      {
+        'image': 'assets/picture/venue1.jpg',
+        'title': 'Turf Arena',
+        'offer': '20% off on weekday slots!',
+      },
+      {
+        'image': 'assets/picture/venue2.jpg',
+        'title': 'Elite Sports Club',
+        'offer': 'Free drink with night booking 🍹',
+      },
+      {
+        'image': 'assets/picture/venue3.jpg',
+        'title': 'Greenfield Ground',
+        'offer': 'First booking free!',
+      },
+    ];
+
+    // Start auto slide
+    Timer.periodic(Duration(seconds: 4), (Timer timer) {
+      if (_pageController.hasClients) {
+        _currentPage = (_currentPage + 1) % _promoCards.length;
+        _pageController.animateToPage(
+          _currentPage,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      }
+    });
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print(message);
+      print('Message received: ${message}');
     });
-    UserManager.loadUserId();
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print(message);
+      print('Message received: ${message}');
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -80,87 +120,36 @@ class _HomepageState extends State<Homepage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            gameStatus,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Text(
+                      "🔥 Featured Venues Near You",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Create Game",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const CreateGame()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero,
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                            ),
-                            child: Text(
-                              "Create",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        gameCalendarStatus,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Divider(thickness: 1),
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "View My Calendar",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  SizedBox(height: 12),
+                  Container(
+                    height: 180,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _promoCards.length,
+                      itemBuilder: (context, index) {
+                        final promo = _promoCards[index];
+                        return _buildPromoCard(
+                          image: promo['image']!,
+                          title: promo['title']!,
+                          offer: promo['offer']!,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
               Column(
@@ -215,6 +204,51 @@ class _HomepageState extends State<Homepage> {
         ),
       ),
       bottomNavigationBar: BottomNavbar(),
+    );
+  }
+
+  Widget _buildPromoCard(
+      {required String image, required String title, required String offer}) {
+    return Container(
+      width: 250,
+      margin: EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(
+          image: AssetImage(image),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+          ),
+        ),
+        padding: EdgeInsets.all(12),
+        alignment: Alignment.bottomLeft,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Text(
+              offer,
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -165,6 +165,13 @@ class _LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenWidth < 600; // Adjust breakpoint as needed
 
     return Scaffold(
+      // appBar: AppBar(
+      //     leading: IconButton(
+      //   icon: Icon(Icons.arrow_back), // Back arrow icon
+      //   onPressed: () {
+      //     Navigator.pop(context); // Navigates to the previous screen
+      //   },
+      // )),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(

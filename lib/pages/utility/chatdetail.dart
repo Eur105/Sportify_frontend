@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -31,6 +33,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final ScrollController _scrollController = ScrollController();
   static String? currentUserId = "";
   XFile? selectedImage;
+  String? otherUserId;
 
   static Future<void> _loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -38,6 +41,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     currentUserId = prefs.getString("userUuid");
     print("see uid in chatdetail page: $currentUserId");
     //loadChats(); // assuming "uuid" is the key
+  }
+
+  Future<String?> _getOtherUserId() async {
+    final chatDoc = await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(widget.chatId)
+        .get();
+    final List participants = chatDoc['participants'];
+    return participants.firstWhere((id) => id != currentUserId);
+  }
+
+  Future<DocumentSnapshot> _getOtherUserData() async {
+    otherUserId ??= await _getOtherUserId();
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(otherUserId)
+        .get();
   }
 
   @override
@@ -50,15 +70,41 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: const AssetImage("assets/picture.png"),
-            ),
-            const SizedBox(width: 10),
-            Text(widget.chatName),
-          ],
-        ),
+        title: widget.isGroup
+            ? Row(
+                children: [
+                  const Icon(Icons.group),
+                  const SizedBox(width: 10),
+                  Text(widget.chatName),
+                ],
+              )
+            : FutureBuilder<DocumentSnapshot>(
+                future: _getOtherUserData(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text("Loading...");
+                  } else if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return const Text("Unknown User");
+                  } else {
+                    final userData = snapshot.data!;
+                    final name = userData['name'] ?? 'User';
+                    final photoUrl = userData['photoUrl'] ?? '';
+
+                    return Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: photoUrl.isNotEmpty
+                              ? FileImage(File(photoUrl))
+                              : const AssetImage("assets/default_avatar.png")
+                                  as ImageProvider,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(name),
+                      ],
+                    );
+                  }
+                },
+              ),
         actions: [
           if (widget.isGroup)
             IconButton(
@@ -234,7 +280,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
         return userData['name'] ?? 'Unknown User';
       }
-      return 'Unknown User';
+      return 'Admin';
     } catch (e) {
       print('Error getting sender name: $e');
       return 'Unknown User';
@@ -412,7 +458,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           leading: CircleAvatar(
                             backgroundImage: member['photoUrl'] != null &&
                                     member['photoUrl'].isNotEmpty
-                                ? NetworkImage(member['photoUrl'])
+                                ? FileImage((File(member['photoUrl'])))
                                 : const AssetImage("assets/profile.png")
                                     as ImageProvider,
                           ),
@@ -484,14 +530,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.search),
-                title: const Text('Search in conversation'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Implement search functionality
-                },
-              ),
               if (widget.isGroup)
                 ListTile(
                   leading: const Icon(Icons.person_add),
@@ -570,14 +608,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     leading: CircleAvatar(
                       backgroundImage: member['photoUrl'] != null &&
                               member['photoUrl'].isNotEmpty
-                          ? NetworkImage(member['photoUrl'])
+                          ? FileImage(File(member['photoUrl']))
                           : const AssetImage("assets/profile.png")
                               as ImageProvider,
                     ),
                     title: Text(member['name'] ?? 'Unknown User'),
                     onTap: () {
                       Navigator.pop(context);
-                      _removeMemberFromGroup(memberId);
+                      _removeMemberFromGroup(memberId, currentUserId!);
                     },
                   );
                 },
@@ -601,7 +639,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
 // Now, let's implement the _removeMemberFromGroup function
-  Future<void> _removeMemberFromGroup(String memberId) async {
+  Future<void> _removeMemberFromGroup(
+      String memberId, String currentUserId) async {
     try {
       // Get the current list of participants
       DocumentSnapshot chatDoc = await FirebaseFirestore.instance
@@ -631,10 +670,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           .doc(memberId)
           .get();
 
-      String userName = 'Unknown User';
+      String userName = "unknown user";
       if (userDoc.exists) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-        userName = userData['name'] ?? 'Unknown User';
+        userName = userData['name'] ?? 'unknown User';
       }
 
       await FirebaseFirestore.instance
@@ -642,7 +681,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           .doc(widget.chatId)
           .collection('messages')
           .add({
-        'senderId': 'system',
+        'senderId': 'currentUserId',
         'text': '$userName was removed from the group',
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
@@ -695,28 +734,34 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             // Filter function
-            void filterUsers(String query) {
-              setState(() {
-                if (query.isEmpty) {
-                  filteredUsers = allUsers.where((doc) {
-                    String userId = doc.id;
-                    return !currentParticipants.contains(userId) &&
-                        userId != currentUserId;
-                  }).toList();
-                } else {
-                  filteredUsers = allUsers.where((doc) {
-                    String userId = doc.id;
-                    if (currentParticipants.contains(userId) ||
-                        userId == currentUserId) {
-                      return false;
-                    }
+            void filterUsers(String query) async {
+              if (query.isEmpty) {
+                setState(() {
+                  filteredUsers = [];
+                });
+                return;
+              }
 
-                    Map<String, dynamic> userData =
-                        doc.data() as Map<String, dynamic>;
-                    String userName = userData['name'] ?? '';
-                    return userName.toLowerCase().contains(query.toLowerCase());
-                  }).toList();
+              QuerySnapshot snapshot = await FirebaseFirestore.instance
+                  .collection('users')
+                  .get(); // Load all users first
+
+              List<QueryDocumentSnapshot> results = [];
+
+              for (var doc in snapshot.docs) {
+                final userData = doc.data() as Map<String, dynamic>;
+                final userId = doc.id;
+                final userName = userData['name']?.toLowerCase() ?? '';
+
+                if (userName.contains(query.toLowerCase()) &&
+                    !currentParticipants.contains(userId) &&
+                    userId != currentUserId) {
+                  results.add(doc);
                 }
+              }
+
+              setState(() {
+                filteredUsers = results;
               });
             }
 
@@ -736,6 +781,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       ),
                       onChanged: filterUsers,
                     ),
+
                     const SizedBox(height: 10),
                     // User list
                     Expanded(

@@ -46,6 +46,7 @@ dependencies:
   socket_io_client: ^2.0.3+1
   flutter_local_notifications: ^18.0.1
   fl_chart: ^0.70.2
+  lottie: ^3.3.1
   #firebase_core: ^2.24.2
   
   #firebase_messaging: ^15.2.4
@@ -87,6 +88,7 @@ flutter:
   assets:
     - assets/picture/
     - assets/picture/sl.mp4
+    - assets/animation/
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

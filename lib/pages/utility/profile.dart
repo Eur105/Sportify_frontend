@@ -80,6 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('token');
         await prefs.remove('userUuid');
+        // await prefs.remove('profilePicture');
         await prefs.clear();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

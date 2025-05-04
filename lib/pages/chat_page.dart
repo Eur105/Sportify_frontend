@@ -1,4 +1,6 @@
-// ignore_for_file: unused_import, unused_element, avoid_print
+// ignore_for_file: unused_import, unused_element, avoid_print, collection_methods_unrelated_type
+
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,10 +8,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/notification_page.dart';
+import 'package:sportify_final/pages/searching_panel/search_user.dart';
 import 'package:sportify_final/pages/utility/bottom_navbar.dart';
 import 'package:sportify_final/pages/utility/chatdetail.dart';
 import 'package:sportify_final/pages/utility/chatservice.dart';
 import 'package:sportify_final/pages/utility/profile.dart';
+
 import 'package:sportify_final/pages/utility/usermanage.dart';
 
 class ChatPage extends StatefulWidget {
@@ -63,14 +67,15 @@ class _ChatPageState extends State<ChatPage> {
           var chatData = doc.data() as Map<String, dynamic>;
 
           // Get other user ID
-          String otherUserId = (chatData['participants'] as List).firstWhere(
-              (id) => id != UserManager.currentUserId,
-              orElse: () => '');
+          String otherUserId = (chatData['participants'] as List)
+              .firstWhere((id) => id != currentUserId, orElse: () => '');
 
           if (otherUserId.isNotEmpty) {
             // Get user data using UserManager
+            print("participants: ${chatData['participants']}");
             var userData = await UserManager.getUserData(otherUserId);
-            print("Other user id: $otherUserId");
+            print("Other user id ok: $otherUserId");
+
             if (userData != null) {
               tempDms.add({
                 'id': doc.id,
@@ -367,7 +372,7 @@ class _ChatPageState extends State<ChatPage> {
                                 title: Text(user['name'] ?? 'No Name'),
                                 secondary: CircleAvatar(
                                   backgroundImage:
-                                      NetworkImage(user['photoUrl'] ?? ''),
+                                      FileImage(File(user['photoUrl'] ?? '')),
                                 ),
                                 value: isSelected,
                                 onChanged: (bool? value) {
@@ -452,9 +457,9 @@ class _ChatPageState extends State<ChatPage> {
                             users[index].data() as Map<String, dynamic>;
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: userData['photoUrl'] != null &&
-                                    userData['photoUrl'].isNotEmpty
-                                ? NetworkImage(userData['photoUrl'])
+                            backgroundImage: userData["photoUrl"] != null &&
+                                    userData["photoUrl"].toString().isNotEmpty
+                                ? FileImage(File(userData["photoUrl"]))
                                 : const AssetImage("assets/profile.png")
                                     as ImageProvider,
                           ),
@@ -498,27 +503,35 @@ class _ChatPageState extends State<ChatPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.search),
             onPressed: () {
-              if (showDms) {
-                _showNewChatDialog();
-              } else {
-                _showCreateGroupDialog();
-              }
+              // Navigate to the search page (previously in the search bar)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SearchUsersPage()),
+              ).then((_) {
+                // Refresh chats when returning
+                loadChats();
+              });
             },
           ),
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => NotificationPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
             },
           ),
         ],
@@ -547,26 +560,9 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           SizedBox(height: isSmallScreen ? 8 : 10), // Responsive spacing
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: TextField(
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: "Search...",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) {
-                // Navigator.push(context,
-                //     MaterialPageRoute(builder: (context) => SearchUsersPage()));
-                // Implement search functionality here
-              },
-            ),
-          ),
+
+          // 🟠 Removed Search TextField from here
+
           SizedBox(height: isSmallScreen ? 8 : 10), // Responsive spacing
           Expanded(
             child: isLoading
@@ -574,6 +570,17 @@ class _ChatPageState extends State<ChatPage> {
                 : _buildChatList(showDms ? dms : groups),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (showDms) {
+            _showNewChatDialog();
+          } else {
+            _showCreateGroupDialog();
+          }
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavbar(),
     );
@@ -660,7 +667,7 @@ class _ChatPageState extends State<ChatPage> {
               leading: CircleAvatar(
                 backgroundImage: chatData[index]["photoUrl"] != null &&
                         chatData[index]["photoUrl"].isNotEmpty
-                    ? NetworkImage(chatData[index]["photoUrl"])
+                    ? FileImage(File(chatData[index]["photoUrl"]))
                     : const AssetImage("assets/profile.png") as ImageProvider,
               ),
               title: Text(chatData[index]["name"] ?? ""),
