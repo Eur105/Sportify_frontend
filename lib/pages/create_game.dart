@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/utility/api_constants.dart';
+import 'package:sportify_final/pages/utility/venuelocation.dart';
 
 class CreateGame extends StatefulWidget {
   const CreateGame({super.key});
@@ -34,6 +35,10 @@ class _CreateGameState extends State<CreateGame> {
   String? selectedSkillLevel;
   final List<String> gameTypes = ['Football', 'Cricket', 'Badminton'];
   TimeOfDay? startTime;
+
+  String? venueName;
+  double? venueLatitude;
+  double? venueLongitude;
 
   @override
   void initState() {
@@ -137,11 +142,13 @@ class _CreateGameState extends State<CreateGame> {
       "gameDate": dateController.text,
       "gameTime": "${startTimeController.text} - ${endTimeController.text}",
       "visibility": visibility,
-      "venueName": venueController.text,
+      "venueName": venueName!,
       "hostTeamSize": playersNeededController.text,
       "opponentDifficulty": selectedSkillLevel ?? "",
       "isOpponent": lookingForOpponent.toString(),
       "isTeamPlayer": needPlayers.toString(),
+      "latitude": venueLatitude.toString(),
+      "longitude": venueLongitude.toString()
     };
 
     try {
@@ -226,12 +233,16 @@ class _CreateGameState extends State<CreateGame> {
                     ),
                     SizedBox(
                         height: isSmallScreen ? 12 : 16), // Responsive spacing
-                    TextFormField(
-                      controller: venueController,
-                      decoration:
-                          const InputDecoration(labelText: 'Select Venue'),
-                      validator: (value) =>
-                          value == null || value.isEmpty ? 'Enter venue' : null,
+                    VenueSearchField(
+                      onVenueSelected: (name, lat, lon) {
+                        setState(() {
+                          venueName = name;
+                          venueLatitude = lat;
+                          venueLongitude = lon;
+                          print(
+                              'Selected venue: $venueName at $venueLatitude, $venueLongitude');
+                        });
+                      },
                     ),
                     SizedBox(
                         height: isSmallScreen ? 12 : 16), // Responsive spacing
@@ -464,4 +475,30 @@ Future<void> _showNotification(String title, String body) async {
 
   await FlutterLocalNotificationsPlugin()
       .show(0, title, body, notificationDetails);
+}
+
+class Venue {
+  final String name;
+  final String neighbourhood;
+  final String lat;
+  final String lon;
+
+  Venue({
+    required this.name,
+    required this.neighbourhood,
+    required this.lat,
+    required this.lon,
+  });
+
+  factory Venue.fromJson(Map<String, dynamic> json) {
+    return Venue(
+      name: json['name'] ?? '',
+      neighbourhood: json['address']['neighbourhood'] ?? '',
+      lat: json['lat'],
+      lon: json['lon'],
+    );
+  }
+
+  @override
+  String toString() => '$name (${neighbourhood})';
 }

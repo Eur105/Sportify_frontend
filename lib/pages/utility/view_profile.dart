@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sportify_final/pages/utility/api_constants.dart';
 import 'package:sportify_final/pages/utility/edit_profile.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_animate/flutter_animate.dart';
@@ -25,6 +26,7 @@ class _ViewProfileState extends State<ViewProfile> {
       phoneNumber,
       biodescr,
       bioskill,
+      userName,
       bioExperience;
   String? loggedInUserId;
   int matchesPlayed = 20;
@@ -59,6 +61,7 @@ class _ViewProfileState extends State<ViewProfile> {
         bioskill = prefs.getString('bioSkillLevel') ?? "No bio available";
         bioExperience = prefs.getString('bioExperience') ?? "No bio available";
         profilePicturePath = prefs.getString('profilePicture');
+        userName = prefs.getString('userName');
         isLoading = false;
       });
     } else {
@@ -67,7 +70,7 @@ class _ViewProfileState extends State<ViewProfile> {
   }
 
   Future<void> _fetchUserProfile(String userId) async {
-    final String url = "http://localhost:5000/api/user/getuser/$userId";
+    final String url = "${ApiConstants.baseUrl}:5000/api/user/getuser/$userId";
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -86,6 +89,7 @@ class _ViewProfileState extends State<ViewProfile> {
           bioskill = data['userbio']['skillLevel'] ?? "No bio available";
           //bioExperience = data['userbio']['experience'] ?? "No bio available";
           profilePicturePath = data['profilePicture'] ?? "";
+          userName = data['userName'] ?? "No user name";
           isLoading = false;
         });
       } else {
@@ -104,7 +108,7 @@ class _ViewProfileState extends State<ViewProfile> {
 
   Future<void> _fetchActiveLevel() async {
     final String url =
-        "http://localhost:5000/api/user/get-active-level/${widget.viewedUserId}";
+        "${ApiConstants.baseUrl}:5000/api/user/get-active-level/${widget.viewedUserId}";
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -120,7 +124,7 @@ class _ViewProfileState extends State<ViewProfile> {
 
   Future<void> _fetchUserBadges() async {
     final String url =
-        "http://localhost:5000/api/badge/getuserbadges/${widget.viewedUserId}";
+        "${ApiConstants.baseUrl}:5000/api/badge/getuserbadges/${widget.viewedUserId}";
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -202,7 +206,7 @@ class _ViewProfileState extends State<ViewProfile> {
                               fontSize: isSmallScreen ? 18 : 22,
                               fontWeight: FontWeight.bold),
                         ),
-                        Text(gender ?? ""),
+                        Text("@$userName"),
                         SizedBox(
                             height:
                                 isSmallScreen ? 8 : 10), // Responsive spacing

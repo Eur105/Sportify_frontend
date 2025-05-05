@@ -23,11 +23,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sportify_final/pages/utility/usermanage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SocketService().initialize();
   await Firebase.initializeApp();
+
+  await Supabase.initialize(
+    url: 'https://enbgwqhovsbgchnegsjd.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVuYmd3cWhvdnNiZ2NobmVnc2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDM0ODYsImV4cCI6MjA2MjAxOTQ4Nn0.AqZe03W8YYYNqIyeAFX4CCqBSkeDt5bcoR0kQ2Qyz_M',
+  );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -40,6 +47,8 @@ void main() async {
 
   runApp(MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -96,7 +105,7 @@ class _MyAppState extends State<MyApp> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             NotificationManager().initialize(context);
           });
-          return SplashPage(); // Splash/Login
+          return RolePage(); // Splash/Login
         },
       ),
     );

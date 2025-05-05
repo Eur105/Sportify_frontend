@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, unused_element, unused_local_variable
 
 import 'dart:io';
 
@@ -7,9 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/utility/chatservice.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 //import 'package:file_picker/file_picker.dart';
 
 class ChatDetailPage extends StatefulWidget {
@@ -34,6 +37,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   static String? currentUserId = "";
   XFile? selectedImage;
   String? otherUserId;
+  final SupabaseClient _supabase = Supabase.instance.client;
+  bool _isUploading = false;
 
   static Future<void> _loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -167,6 +172,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       senderNameFuture: widget.isGroup && !isMe
                           ? _getSenderName(message['senderId'])
                           : null,
+                      fileUrl: message['fileUrl'],
+                      fileType: message['fileType'],
+                      fileName: message['fileName'],
                     );
                   },
                 );
@@ -290,46 +298,109 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget _buildMessageBubble({
     required String message,
     required bool isMe,
-    Timestamp? timestamp,
-    Future<String>? senderNameFuture, // Changed from String? to Future<String>?
+    required dynamic timestamp,
+    Future<String>? senderNameFuture,
+    String? fileUrl,
+    String? fileType,
+    String? fileName,
   }) {
-    final time =
-        timestamp != null ? DateFormat('HH:mm').format(timestamp.toDate()) : '';
-
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isMe ? Colors.green[100] : Colors.grey[200],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Show sender name if it's a group chat and not the current user's message
             if (senderNameFuture != null)
               FutureBuilder<String>(
                 future: senderNameFuture,
                 builder: (context, snapshot) {
-                  return Text(
-                    snapshot.data ?? 'Loading...',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.grey[700],
-                    ),
-                  );
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text('Loading...',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12));
+                  }
+                  return Text(snapshot.data ?? 'Unknown',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12));
                 },
               ),
-            Text(message),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[700],
+
+            // Display image attachment if exists
+            if (fileUrl != null && fileType == 'image')
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  fileUrl,
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-              textAlign: TextAlign.right,
+
+            // Display file attachment if exists
+            if (fileUrl != null && fileType == 'file')
+              InkWell(
+                onTap: () {
+                  // Launch file URL
+                  // launch(fileUrl);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.insert_drive_file),
+                    const SizedBox(width: 8),
+                    Text(
+                      fileName ?? 'File',
+                      style: TextStyle(
+                        color: Colors.blue[800],
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Display text message if exists
+            if (message.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(message),
+              ),
+
+            // Display timestamp
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                timestamp != null
+                    ? DateFormat.jm().format(timestamp.toDate())
+                    : '',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[600],
+                ),
+              ),
             ),
           ],
         ),
@@ -338,7 +409,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _showAttachmentOptions() {
-    XFile? selectedImage;
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -355,8 +425,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Add a variable to store the selected image file
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -369,12 +437,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       final XFile? image =
                           await _picker.pickImage(source: ImageSource.gallery);
                       if (image != null) {
-                        // Store the selected image
-                        setState(() {
-                          selectedImage = image;
-                        });
+                        Navigator.pop(context); // Close the dialog first
+
+                        // Upload the image to Supabase
+                        final fileUrl = await _uploadFileToSupabase(
+                          File(image.path),
+                          'image',
+                        );
+
+                        // Send the image message
+                        if (fileUrl != null) {
+                          await _sendAttachmentMessage(fileUrl, 'image');
+                        }
                       }
-                      Navigator.pop(context); // Close the dialog
                     },
                   ),
                   _buildAttachmentOption(
@@ -386,19 +461,58 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       final XFile? image =
                           await _picker.pickImage(source: ImageSource.camera);
                       if (image != null) {
-                        // Store the captured image
-                        setState(() {
-                          selectedImage = image;
-                        });
+                        Navigator.pop(context); // Close the dialog first
+
+                        // Upload the image to Supabase
+                        final fileUrl = await _uploadFileToSupabase(
+                          File(image.path),
+                          'image',
+                        );
+
+                        // Send the image message
+                        if (fileUrl != null) {
+                          await _sendAttachmentMessage(fileUrl, 'image');
+                        }
                       }
-                      Navigator.pop(context); // Close the dialog
                     },
                   ),
+                  // _buildAttachmentOption(
+                  //   icon: Icons.insert_drive_file,
+                  //   label: 'File',
+                  //   onTap: () async {
+                  //     // You'll need to add file_picker package for this
+                  //     // import 'package:file_picker/file_picker.dart';
+
+                  //     // FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  //     // if (result != null) {
+                  //     //   Navigator.pop(context); // Close the dialog first
+                  //     //
+                  //     //   File file = File(result.files.single.path!);
+                  //     //
+                  //     //   // Upload the file to Supabase
+                  //     //   final fileUrl = await _uploadFileToSupabase(
+                  //     //     file,
+                  //     //     'file',
+                  //     //   );
+                  //     //
+                  //     //   // Send the file message
+                  //     //   if (fileUrl != null) {
+                  //     //     await _sendAttachmentMessage(fileUrl, 'file');
+                  //     //   }
+                  //     // }
+
+                  //     // For now, just close the dialog
+                  //     Navigator.pop(context);
+                  //   },
+                  // ),
                 ],
               ),
-
-// Display the selected image if available
-              if (selectedImage != null) Image.file(File(selectedImage!.path)),
+              // Show loading indicator when uploading
+              if (_isUploading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: CircularProgressIndicator(),
+                ),
             ],
           ),
         );
@@ -411,13 +525,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     required String label,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 30),
-          const SizedBox(height: 5),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.blue[800]),
+          ),
+          const SizedBox(height: 8),
           Text(label),
         ],
       ),
@@ -751,7 +871,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               for (var doc in snapshot.docs) {
                 final userData = doc.data() as Map<String, dynamic>;
                 final userId = doc.id;
-                final userName = userData['name']?.toLowerCase() ?? '';
+                final userName = userData['userName']?.toLowerCase() ?? '';
 
                 if (userName.contains(query.toLowerCase()) &&
                     !currentParticipants.contains(userId) &&
@@ -776,7 +896,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     TextField(
                       controller: searchController,
                       decoration: const InputDecoration(
-                        hintText: 'Search by name',
+                        hintText: 'Search by user name',
                         prefixIcon: Icon(Icons.search),
                       ),
                       onChanged: filterUsers,
@@ -791,7 +911,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           var userDoc = filteredUsers[index];
                           var userData = userDoc.data() as Map<String, dynamic>;
                           var userId = userDoc.id;
-                          var userName = userData['name'] ?? 'Unknown User';
+                          var userName = userData['userName'] ?? 'Unknown User';
 
                           bool isSelected = selectedUsers.contains(userId);
 
@@ -810,7 +930,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             secondary: CircleAvatar(
                               backgroundImage: userData['photoUrl'] != null &&
                                       userData['photoUrl'].isNotEmpty
-                                  ? NetworkImage(userData['photoUrl'])
+                                  ? FileImage(File(userData['photoUrl']))
                                   : const AssetImage("assets/profile.png")
                                       as ImageProvider,
                             ),
@@ -869,5 +989,171 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         SnackBar(content: Text('Failed to add members: $e')),
       );
     }
+  }
+
+  Future<String?> _uploadFileToSupabase(File file, String fileType) async {
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+
+      // Generate a unique file name to prevent collisions
+      final String fileName =
+          '${const Uuid().v4()}${path.extension(file.path)}';
+
+      // Define storage bucket based on file type
+      final String bucket = fileType == 'image' ? 'chatimages' : 'chat_files';
+
+      // Upload the file to Supabase Storage
+      final response = await _supabase.storage
+          .from(bucket) // Make sure you're using the correct bucket variable
+          .upload('uploads/$fileName', file);
+
+      // Get the public URL for the uploaded file
+      final String fileUrl =
+          _supabase.storage.from(bucket).getPublicUrl('uploads/$fileName');
+
+      setState(() {
+        _isUploading = false;
+      });
+
+      print('File uploaded successfully: $fileUrl');
+      return fileUrl;
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading file: ${e.toString()}')),
+      );
+      print('Error uploading file: $e');
+      return null;
+    }
+  }
+
+  Future<void> _sendAttachmentMessage(String fileUrl, String fileType) async {
+    try {
+      // Create message data for Firebase (not Supabase)
+      final messageData = {
+        'senderId': currentUserId,
+        'text': '', // Empty text for attachment-only messages
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+        'fileUrl': fileUrl,
+        'fileType': fileType,
+        'fileName':
+            'Attachment', // You can improve this to get actual file name
+      };
+
+      // Add message to Firestore
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add(messageData);
+
+      // Update last message in chat document
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .update({
+        'lastMessage': fileType == 'image' ? '📷 Image' : '📎 File',
+        'lastMessageTime': FieldValue.serverTimestamp(),
+      });
+
+      // Scroll to bottom
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+
+      print('Attachment message sent successfully');
+    } catch (e) {
+      print('Error sending attachment message: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: $e')),
+      );
+    }
+  }
+
+  Widget _buildMessageItem(Map<String, dynamic> message) {
+    final bool isCurrentUser =
+        message['user_id'] == _supabase.auth.currentUser?.id;
+    final String? attachmentUrl = message['attachment_url'];
+    final String? attachmentType = message['attachment_type'];
+
+    return Align(
+      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display attachment if exists
+            if (attachmentUrl != null && attachmentType == 'image')
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  attachmentUrl,
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            // Display file link if it's a file
+            if (attachmentUrl != null && attachmentType == 'file')
+              InkWell(
+                onTap: () {
+                  // Here you could use url_launcher to open the file
+                  // launch(attachmentUrl);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.insert_drive_file),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Attachment',
+                      style: TextStyle(
+                        color: Colors.blue[800],
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Display text content if exists
+            if (message['content'] != null && message['content'].isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(message['content']),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

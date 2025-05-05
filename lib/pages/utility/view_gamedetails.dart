@@ -1,9 +1,15 @@
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportify_final/pages/utility/api_constants.dart';
+import 'package:sportify_final/pages/utility/chatdetail.dart';
 import 'dart:convert';
 import 'package:sportify_final/pages/utility/view_profile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sportify_final/pages/utility/chatservice.dart'; // Make sure to import ChatService
+// Update import path as needed
 
 class ViewGameDetails extends StatefulWidget {
   final String? gameId;
@@ -32,7 +38,7 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
   Future<void> _loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      currentUserId = prefs.getString("userUuid"); // assuming "uuid" is the key
+      currentUserId = prefs.getString("userUuid");
     });
   }
 
@@ -85,6 +91,59 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
     }
   }
 
+  // Function to start or navigate to a direct message chat
+  Future<void> _startDirectMessage(
+      String otherUserId, String otherUserName) async {
+    try {
+      if (currentUserId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please log in to send messages")),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Get or create a chat with this user
+      final chatId = await ChatService.createOrGetDirectChat(
+        currentUserId!,
+        otherUserId,
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (chatId != null) {
+        // Navigate to chat detail page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatDetailPage(
+              chatId: chatId,
+              chatName: otherUserName,
+              isGroup: false,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to create chat")),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -129,41 +188,60 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
       color: Colors.green,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: Row(
           children: [
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.green, size: 30),
-              ),
-              title: Text(
+            // Avatar
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Colors.green, size: 30),
+            ),
+            const SizedBox(width: 12),
+
+            // Name
+            Expanded(
+              child: Text(
                 "${hostData!["firstName"].toUpperCase()} ${hostData!["lastName"].toUpperCase()}",
                 style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              // subtitle: Text(
-              //   "Contact: ${hostData!["phoneNo"]}",
-              //   style: const TextStyle(fontSize: 14, color: Colors.white70),
-              // ),
-              trailing: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            // Message Icon (only if not the host)
+            if (currentUserId != hostData!["uuid"]) ...[
+              IconButton(
+                icon: const Icon(Icons.message, color: Colors.white),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ViewProfile(viewedUserId: hostData!["uuid"]),
-                    ),
+                  _startDirectMessage(
+                    hostData!["uuid"],
+                    "${hostData!["firstName"]} ${hostData!["lastName"]}",
                   );
                 },
-                child: const Text("View Profile",
-                    style: TextStyle(color: Colors.green)),
+              ),
+            ],
+
+            // View Profile Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ViewProfile(viewedUserId: hostData!["uuid"]),
+                  ),
+                );
+              },
+              child: const Text(
+                "View Profile",
+                style: TextStyle(color: Colors.green),
               ),
             ),
           ],
@@ -236,10 +314,13 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
   Widget _buildJoinedPlayersList() {
     if (joinedPlayers == null || joinedPlayers!.isEmpty) {
       return const Center(
-        child: Text("No players have joined yet.",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        child: Text(
+          "No players have joined yet.",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       );
     }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -251,43 +332,79 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
             const Text(
               "Joined Players",
               style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
             const Divider(),
             ...joinedPlayers!.map((player) {
               var requester = player['Requester'];
-              return ListTile(
-                leading: const Icon(Icons.sports_soccer, color: Colors.green),
-                title: Text(
-                  "${requester["firstName"].toUpperCase()} ${requester["lastName"].toUpperCase()}",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text("Contact: ${requester["phoneNo"]}"),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.account_circle,
-                          color: Colors.green, size: 30),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ViewProfile(viewedUserId: requester["uuid"]),
+                    const Icon(Icons.sports_soccer, color: Colors.green),
+
+                    const SizedBox(width: 10),
+
+                    // Expanded to prevent overflow
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${requester["firstName"].toUpperCase()} ${requester["lastName"].toUpperCase()}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        );
-                      },
-                    ),
-                    if (currentUserId == hostData!["uuid"])
-                      IconButton(
-                        icon:
-                            const Icon(Icons.remove_circle, color: Colors.red),
-                        onPressed: () =>
-                            _confirmRemovePlayer(requester["uuid"]),
+                          Text(
+                            "Contact: ${requester["phoneNo"]}",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
                       ),
+                    ),
+
+                    // Action Buttons
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (currentUserId != requester["uuid"])
+                          IconButton(
+                            icon:
+                                const Icon(Icons.message, color: Colors.green),
+                            onPressed: () {
+                              _startDirectMessage(
+                                requester["uuid"],
+                                "${requester["firstName"]} ${requester["lastName"]}",
+                              );
+                            },
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.account_circle,
+                              color: Colors.green, size: 30),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ViewProfile(
+                                    viewedUserId: requester["uuid"]),
+                              ),
+                            );
+                          },
+                        ),
+                        if (currentUserId == hostData!["uuid"])
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle,
+                                color: Colors.red),
+                            onPressed: () =>
+                                _confirmRemovePlayer(requester["uuid"]),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               );
@@ -320,10 +437,6 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
   }
 
   Widget _buildOpponentTeam() {
-    // if (oppPlayers == null) {
-    //   return const SizedBox.shrink(); // Or return a loading indicator if needed
-    // }
-
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -341,37 +454,70 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
               ),
             ),
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.group, color: Colors.green),
-              title: Text(
-                "${oppPlayers!["Requester"]["firstName"].toUpperCase()} ${oppPlayers!["Requester"]["lastName"].toUpperCase()}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text("Contact: ${oppPlayers!["Requester"]["phoneNo"]}"),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.account_circle,
-                        color: Colors.green, size: 30),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewProfile(
-                              viewedUserId: oppPlayers!["Requester"]["uuid"]),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.group, color: Colors.green),
+
+                const SizedBox(width: 10),
+
+                // Name and Contact Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${oppPlayers!["Requester"]["firstName"].toUpperCase()} ${oppPlayers!["Requester"]["lastName"].toUpperCase()}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                    },
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        "Contact: ${oppPlayers!["Requester"]["phoneNo"]}",
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
                   ),
-                  if (currentUserId == hostData!["uuid"])
+                ),
+
+                // Action Buttons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (currentUserId != oppPlayers!["Requester"]["uuid"])
+                      IconButton(
+                        icon: const Icon(Icons.message, color: Colors.green),
+                        onPressed: () {
+                          _startDirectMessage(
+                            oppPlayers!["Requester"]["uuid"],
+                            "${oppPlayers!["Requester"]["firstName"]} ${oppPlayers!["Requester"]["lastName"]}",
+                          );
+                        },
+                      ),
                     IconButton(
-                      icon: const Icon(Icons.remove_circle, color: Colors.red),
-                      onPressed: () => _confirmRemovePlayer(
-                          oppPlayers!["Requester"]["uuid"]),
+                      icon: const Icon(Icons.account_circle,
+                          color: Colors.green, size: 30),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ViewProfile(
+                                viewedUserId: oppPlayers!["Requester"]["uuid"]),
+                          ),
+                        );
+                      },
                     ),
-                ],
-              ),
+                    if (currentUserId == hostData!["uuid"])
+                      IconButton(
+                        icon:
+                            const Icon(Icons.remove_circle, color: Colors.red),
+                        onPressed: () => _confirmRemovePlayer(
+                            oppPlayers!["Requester"]["uuid"]),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),

@@ -77,6 +77,8 @@ class _PlayPageState extends State<PlayPage> {
                 "isOpponent": game["isOpponent"]?.toString() ?? "false",
                 "isTeamPlayer": game["isTeamPlayer"]?.toString() ?? "false",
                 "opponentTeamId": game["opponentTeamId"] ?? "0",
+                "latitude": game["latitude"].toString(),
+                "longitude": game["longitude"].toString(),
               };
 
               // Categorize based on visibility type
@@ -443,6 +445,10 @@ class _PlayPageState extends State<PlayPage> {
         backgroundColor: backgroundGrey,
         appBar: AppBar(
           backgroundColor: Colors.white,
+          title: const Text(
+            "Let's Play",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           elevation: 0,
           actions: [
             IconButton(

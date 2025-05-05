@@ -47,6 +47,9 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   fl_chart: ^0.70.2
   lottie: ^3.3.1
+  supabase_flutter: ^2.9.0
+  path: ^1.9.1
+  uuid: ^4.5.1
   #firebase_core: ^2.24.2
   
   #firebase_messaging: ^15.2.4

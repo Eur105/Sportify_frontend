@@ -439,4 +439,57 @@ class ChatService {
       return null;
     }
   }
+
+  static Future<String?> createOrGetDirectChat(
+      String userId1, String userId2) async {
+    try {
+      // Check if a chat already exists between these users
+      final querySnapshot = await _firestore
+          .collection('chats')
+          .where('participants', arrayContains: userId1)
+          .get();
+
+      // Search for existing direct chat
+      for (var doc in querySnapshot.docs) {
+        final chatData = doc.data();
+        final List participants = chatData['participants'] ?? [];
+        final bool isGroup = chatData['isGroup'] ?? false;
+
+        // If this is a direct chat with exactly these two users
+        if (!isGroup &&
+            participants.length == 2 &&
+            participants.contains(userId1) &&
+            participants.contains(userId2)) {
+          return doc.id;
+        }
+      }
+
+      // If no chat exists, create a new one
+      final chatDoc = await _firestore.collection('chats').add({
+        'createdAt': FieldValue.serverTimestamp(),
+        'createdBy': userId1,
+        'isGroup': false,
+        'lastMessage': '',
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'participants': [userId1, userId2],
+      });
+
+      // Add a system message to indicate chat creation
+      await _firestore
+          .collection('chats')
+          .doc(chatDoc.id)
+          .collection('messages')
+          .add({
+        'senderId': 'system',
+        'text': 'Chat started',
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+
+      return chatDoc.id;
+    } catch (e) {
+      print('Error creating/getting direct chat: $e');
+      return null;
+    }
+  }
 }

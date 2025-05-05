@@ -58,7 +58,7 @@ class _SearchUsersPageState extends State<SearchUsersPage> {
 
       for (var doc in querySnapshot.docs) {
         var userData = doc.data() as Map<String, dynamic>;
-        String userName = (userData['name'] ?? '').toLowerCase();
+        String userName = (userData['userName'] ?? '').toLowerCase();
 
         // Skip the current user
         if (doc.id == currentUserId) continue;

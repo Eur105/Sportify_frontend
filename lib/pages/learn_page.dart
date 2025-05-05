@@ -29,6 +29,10 @@ class _LearningScreenState extends State<LearningScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        title: const Text(
+          "Let's Grow",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             onPressed: () {

@@ -124,60 +124,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // Other methods similarly refactored...
-
-  // void processChats(QuerySnapshot snapshot) async {
-  //   List<Map<String, dynamic>> tempDms = [];
-  //   List<Map<String, dynamic>> tempGroups = [];
-
-  //   for (var doc in snapshot.docs) {
-  //     var chatData = doc.data() as Map<String, dynamic>;
-  //     String chatType = chatData['type'] ?? 'direct';
-
-  //     if (chatType == 'direct') {
-  //       // Process direct messages
-  //       String otherUserId = (chatData['participants'] as List)
-  //           .firstWhere((id) => id != currentUserId, orElse: () => '');
-
-  //       if (otherUserId.isNotEmpty) {
-  //         try {
-  //           var userDoc = await FirebaseFirestore.instance
-  //               .collection('users')
-  //               .doc(otherUserId)
-  //               .get();
-
-  //           if (userDoc.exists) {
-  //             var userData = userDoc.data() as Map<String, dynamic>;
-  //             tempDms.add({
-  //               'id': doc.id,
-  //               'name': userData['name'] ?? 'Unknown User',
-  //               'message': chatData['lastMessage'] ?? 'Start a conversation',
-  //               'photoUrl': userData['photoUrl'] ?? '',
-  //               'timestamp': chatData['lastMessageTime'],
-  //             });
-  //           }
-  //         } catch (e) {
-  //           print('Error getting user data: $e');
-  //         }
-  //       }
-  //     } else if (chatType == 'group') {
-  //       // Process group chats
-  //       tempGroups.add({
-  //         'id': doc.id,
-  //         'name': chatData['name'] ?? 'Unnamed Group',
-  //         'message': chatData['lastMessage'] ?? 'No messages yet',
-  //         'photoUrl': chatData['photoUrl'] ?? '',
-  //         'timestamp': chatData['lastMessageTime'],
-  //       });
-  //     }
-  //   }
-
-  //   setState(() {
-  //     dms = tempDms;
-  //     groups = tempGroups;
-  //   });
-  // }
-
   Stream<QuerySnapshot> _chatStream() {
     final userId = currentUserId;
     return FirebaseFirestore.instance
