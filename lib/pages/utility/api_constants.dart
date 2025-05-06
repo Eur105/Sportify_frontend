@@ -1,3 +1,3 @@
 class ApiConstants {
-  static const String baseUrl = "http://192.168.18.74";
+  static const String baseUrl = "https://aae7-202-47-32-85.ngrok-free.app";
 }

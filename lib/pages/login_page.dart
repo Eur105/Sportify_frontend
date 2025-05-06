@@ -26,10 +26,11 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
   TextEditingController _emailcontroller = TextEditingController();
   TextEditingController _passcontroller = TextEditingController();
+  bool isLoading = false;
 
   Future<void> moveToHome(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('${ApiConstants.baseUrl}:5000/api/auth/login');
+      final url = Uri.parse('${ApiConstants.baseUrl}/api/auth/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -126,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (newToken != null && userUUID.isNotEmpty) {
         final response = await http.post(
-          Uri.parse('${ApiConstants.baseUrl}:5000/api/user/storefcmtoken'),
+          Uri.parse('${ApiConstants.baseUrl}/api/user/storefcmtoken'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'userUUID': userUUID,
@@ -146,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
         print("🔁 Refreshed FCM Token: $refreshedToken");
 
         await http.post(
-          Uri.parse('${ApiConstants.baseUrl}:5000/api/user/storefcmtoken'),
+          Uri.parse('${ApiConstants.baseUrl}/api/user/storefcmtoken'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'userUUID': userUUID,
@@ -294,20 +295,28 @@ class _LoginPageState extends State<LoginPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      moveToHome(context);
-                    },
+                    onPressed: isLoading ? null : () => moveToHome(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: Text(
-                      "Login",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize:
-                              isSmallScreen ? 16 : 18), // Adjust font size
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "Login",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isSmallScreen
+                                    ? 16
+                                    : 18), // Adjust font size
+                          ),
                   ),
                 ),
               ),

@@ -45,8 +45,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
     });
 
     final response = await http.get(
-      Uri.parse(
-          '${ApiConstants.baseUrl}:5000/api/booking/getadminbookings/$email'),
+      Uri.parse('${ApiConstants.baseUrl}/api/booking/getadminbookings/$email'),
     );
 
     if (response.statusCode == 200) {
@@ -116,7 +115,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
 
   void processApproval(String action, String bookingUuid) async {
     final apiUrl =
-        "${ApiConstants.baseUrl}:5000/api/booking/confirmbooking/$bookingUuid";
+        "${ApiConstants.baseUrl}/api/booking/confirmbooking/$bookingUuid";
 
     final response = await http.put(
       Uri.parse(apiUrl),

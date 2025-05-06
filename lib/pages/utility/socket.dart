@@ -44,7 +44,7 @@ class SocketService {
   }
 
   void _initializeSocket() {
-    socket = IO.io("${ApiConstants.baseUrl}:5000/game", <String, dynamic>{
+    socket = IO.io("${ApiConstants.baseUrl}/game", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -107,7 +107,7 @@ class SocketService {
     try {
       print("Fetching game requests for user: $userUUID");
       var url = Uri.parse(
-          "${ApiConstants.baseUrl}:5000/api/game/getuserrequests/$userUUID");
+          "${ApiConstants.baseUrl}/api/game/getuserrequests/$userUUID");
 
       var response = await http.get(url);
 

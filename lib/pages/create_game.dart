@@ -132,7 +132,7 @@ class _CreateGameState extends State<CreateGame> {
     }
 
     String visibility = isPublicGame ? "public" : "private";
-    var url = Uri.parse("${ApiConstants.baseUrl}:5000/api/game/addnewgame");
+    var url = Uri.parse("${ApiConstants.baseUrl}/api/game/addnewgame");
 
     Map<String, String> body = {
       "gameName": selectedGame!,

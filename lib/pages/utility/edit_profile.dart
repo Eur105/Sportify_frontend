@@ -80,7 +80,7 @@ class _EditProfileState extends State<EditProfile> {
     };
 
     final response = await http.put(
-      Uri.parse('${ApiConstants.baseUrl}:5000/api/user/editprofile/$userUuid'),
+      Uri.parse('${ApiConstants.baseUrl}/api/user/editprofile/$userUuid'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(profileData),
     );
@@ -393,7 +393,7 @@ class _EditBioPageState extends State<EditBioPage> {
     };
 
     final response = await http.put(
-      Uri.parse('${ApiConstants.baseUrl}:5000/api/user/edituserbio/$userUuid'),
+      Uri.parse('${ApiConstants.baseUrl}/api/user/edituserbio/$userUuid'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(bioData),
     );

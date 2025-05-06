@@ -65,7 +65,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('${ApiConstants.baseUrl}:5000/api/auth/signup');
+      final url = Uri.parse('${ApiConstants.baseUrl}/api/auth/signup');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

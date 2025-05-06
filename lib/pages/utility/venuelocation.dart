@@ -92,8 +92,8 @@ class _VenueSearchFieldState extends State<VenueSearchField> {
     });
 
     try {
-      final response = await http.get(
-          Uri.parse('${ApiConstants.baseUrl}:5000/api/venue/places?q=$query'));
+      final response = await http
+          .get(Uri.parse('${ApiConstants.baseUrl}/api/venue/places?q=$query'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

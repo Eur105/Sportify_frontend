@@ -72,7 +72,7 @@ class _NotificationPageState extends State<NotificationPage> {
     try {
       print("Fetching game requests for user: ${userid}");
       var url = Uri.parse(
-          "${ApiConstants.baseUrl}:5000/api/game/getuserrequests/${userid}");
+          "${ApiConstants.baseUrl}/api/game/getuserrequests/${userid}");
 
       var response = await http.get(url);
       print("API Response status: ${response.statusCode}");
@@ -121,7 +121,7 @@ class _NotificationPageState extends State<NotificationPage> {
       String requestUUID, String gameId, String isAccepted) async {
     print("Responding to request: $requestUUID with status: $isAccepted");
     var url = Uri.parse(
-        "${ApiConstants.baseUrl}:5000/api/game/approverequest/$requestUUID");
+        "${ApiConstants.baseUrl}/api/game/approverequest/$requestUUID");
 
     try {
       var response = await http.put(

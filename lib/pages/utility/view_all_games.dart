@@ -40,8 +40,8 @@ class _ViewUserGamesState extends State<ViewUserGames> {
 
   Future<void> _fetchUserGames() async {
     try {
-      var url = Uri.parse(
-          "${ApiConstants.baseUrl}:5000/api/game/getusergames/$userEmail");
+      var url =
+          Uri.parse("${ApiConstants.baseUrl}/api/game/getusergames/$userEmail");
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -67,8 +67,7 @@ class _ViewUserGamesState extends State<ViewUserGames> {
   Future<void> _recordGameResult(
       String gameId, String score, String result) async {
     try {
-      var url =
-          Uri.parse("${ApiConstants.baseUrl}:5000/api/game/recordgameresult");
+      var url = Uri.parse("${ApiConstants.baseUrl}/api/game/recordgameresult");
       var response = await http.post(url,
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
@@ -265,7 +264,7 @@ class GameCard extends StatelessWidget {
   Future<void> _cancelGame(BuildContext context, String gameId) async {
     try {
       final response = await http.delete(
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/game/cancelgame/$gameId"),
+        Uri.parse("${ApiConstants.baseUrl}/api/game/cancelgame/$gameId"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"userId": userId}),
       );

@@ -120,7 +120,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       }
 
       final response = await http.post(
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/auth/reset-password"),
+        Uri.parse("${ApiConstants.baseUrl}/api/auth/reset-password"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": email,

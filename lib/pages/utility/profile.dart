@@ -50,7 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
-    final String apiUrl = "${ApiConstants.baseUrl}:5000/api/auth/logout";
+    final String apiUrl = "${ApiConstants.baseUrl}/api/auth/logout";
 
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();

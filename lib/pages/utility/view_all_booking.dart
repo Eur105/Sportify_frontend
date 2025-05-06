@@ -39,7 +39,7 @@ class _ViewAllBookingState extends State<ViewAllBooking> {
   Future<void> _cancelBookingUser(
       BuildContext context, String uuid, String email) async {
     final url = Uri.parse(
-        "${ApiConstants.baseUrl}:5000/api/booking/cancelbookinguser/$uuid");
+        "${ApiConstants.baseUrl}/api/booking/cancelbookinguser/$uuid");
 
     try {
       final response = await http.put(
@@ -100,7 +100,7 @@ class _ViewAllBookingState extends State<ViewAllBooking> {
   Future<void> _fetchUserBookings() async {
     try {
       var url = Uri.parse(
-          "${ApiConstants.baseUrl}:5000/api/booking/getuserbookings/$userEmail");
+          "${ApiConstants.baseUrl}/api/booking/getuserbookings/$userEmail");
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -223,7 +223,7 @@ class _BookingCardState extends State<BookingCard> {
   Future<void> _cancelBookingUser(String uuid, String email) async {
     print(email);
     final url = Uri.parse(
-        "${ApiConstants.baseUrl}:5000/api/booking/cancelbookinguser/$uuid");
+        "${ApiConstants.baseUrl}/api/booking/cancelbookinguser/$uuid");
 
     try {
       final response = await http.put(

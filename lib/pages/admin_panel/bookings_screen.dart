@@ -48,7 +48,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
     try {
       String url =
-          "${ApiConstants.baseUrl}:5000/api/booking/getbookingbystatus/$email/?status=$status";
+          "${ApiConstants.baseUrl}/api/booking/getbookingbystatus/$email/?status=$status";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -71,7 +71,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
   Future<void> cancelBookingAdmin(int index, String bookingid) async {
     print(bookingid);
     final url =
-        "${ApiConstants.baseUrl}:5000/api/booking/cancelbookingadmin/$bookingid";
+        "${ApiConstants.baseUrl}/api/booking/cancelbookingadmin/$bookingid";
 
     try {
       final response = await http.put(

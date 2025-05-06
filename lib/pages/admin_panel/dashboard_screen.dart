@@ -46,8 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchBookingCounts() async {
-    final apiUrl =
-        "${ApiConstants.baseUrl}:5000/api/booking/getbookingcount/$email";
+    final apiUrl = "${ApiConstants.baseUrl}/api/booking/getbookingcount/$email";
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

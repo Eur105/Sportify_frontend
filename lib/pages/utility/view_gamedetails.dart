@@ -43,8 +43,8 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
   }
 
   Future<void> _fetchGameDetails() async {
-    final url = Uri.parse(
-        '${ApiConstants.baseUrl}:5000/api/game/getgame/${widget.gameId}');
+    final url =
+        Uri.parse('${ApiConstants.baseUrl}/api/game/getgame/${widget.gameId}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -58,7 +58,7 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
 
   Future<void> _fetchJoinedPlayers() async {
     final url = Uri.parse(
-        '${ApiConstants.baseUrl}:5000/api/game/getgameplayers/${widget.gameId}');
+        '${ApiConstants.baseUrl}/api/game/getgameplayers/${widget.gameId}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -72,7 +72,7 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
 
   Future<void> removePlayer(String playerId) async {
     final url = Uri.parse(
-        "${ApiConstants.baseUrl}:5000/api/game/removeplayer/${widget.gameId}");
+        "${ApiConstants.baseUrl}/api/game/removeplayer/${widget.gameId}");
     final response = await http.delete(
       url,
       headers: {"Content-Type": "application/json"},

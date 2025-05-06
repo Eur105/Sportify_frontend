@@ -177,7 +177,7 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       var response = await http.post(
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/booking/addnewbooking"),
+        Uri.parse("${ApiConstants.baseUrl}/api/booking/addnewbooking"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(bookingData),
       );
@@ -246,7 +246,7 @@ class _BookingPageState extends State<BookingPage> {
   Future<void> useVenueId(String venueId) async {
     try {
       var response = await http.get(
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/venue/getvenue/$venueId"),
+        Uri.parse("${ApiConstants.baseUrl}/api/venue/getvenue/$venueId"),
         headers: {"Content-Type": "application/json"},
       );
 

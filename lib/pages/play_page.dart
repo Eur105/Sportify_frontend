@@ -40,7 +40,7 @@ class _PlayPageState extends State<PlayPage> {
 
   Future<void> _fetchAllGames() async {
     try {
-      var url = Uri.parse("${ApiConstants.baseUrl}:5000/api/game/getallgames");
+      var url = Uri.parse("${ApiConstants.baseUrl}/api/game/getallgames");
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -113,7 +113,7 @@ class _PlayPageState extends State<PlayPage> {
     }
 
     final Uri url =
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/auth/verify-profile");
+        Uri.parse("${ApiConstants.baseUrl}/api/auth/verify-profile");
 
     try {
       final response = await http.post(
@@ -268,7 +268,7 @@ class _PlayPageState extends State<PlayPage> {
 
   Future<bool> _verifyInvitationCode(String code, String gameId) async {
     final Uri url =
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/game/verify-game-code");
+        Uri.parse("${ApiConstants.baseUrl}/api/game/verify-game-code");
     bool valid = false;
 
     try {
@@ -496,7 +496,7 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   void _searchGames(Map<String, String> filters) async {
-    String baseUrl = '${ApiConstants.baseUrl}:5000/api/game/search';
+    String baseUrl = '${ApiConstants.baseUrl}/api/game/search';
     String queryString = filters.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
@@ -537,7 +537,7 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   void _searchPrivateGames(Map<String, String> filters) async {
-    String baseUrl = '${ApiConstants.baseUrl}:5000/api/game/search';
+    String baseUrl = '${ApiConstants.baseUrl}/api/game/search';
     String queryString = filters.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
@@ -900,8 +900,7 @@ class _PlayPageState extends State<PlayPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString("userUuid");
 
-    final url =
-        Uri.parse("${ApiConstants.baseUrl}:5000/api/game/leavegame/$gameId");
+    final url = Uri.parse("${ApiConstants.baseUrl}/api/game/leavegame/$gameId");
     final response = await http.delete(
       url,
       headers: {"Content-Type": "application/json"},
@@ -1055,19 +1054,6 @@ class _PlayPageState extends State<PlayPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on,
-                                          color: Colors.white70, size: 16),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "Venue: ${game["venueName"] ?? "Unknown"}",
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white70),
-                                      ),
-                                    ],
-                                  ),
                                   Row(
                                     children: [
                                       const Icon(Icons.calendar_today,

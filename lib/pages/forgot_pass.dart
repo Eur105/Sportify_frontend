@@ -18,8 +18,7 @@ class _ForgotPassState extends State<ForgotPass> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> sendForgotPasswordRequest() async {
-    final String apiUrl =
-        "${ApiConstants.baseUrl}:5000/api/auth/forgot-password";
+    final String apiUrl = "${ApiConstants.baseUrl}/api/auth/forgot-password";
     final response = await http.post(
       Uri.parse(apiUrl),
       headers: {"Content-Type": "application/json"},
@@ -148,8 +147,7 @@ class _VerificationPageState extends State<VerificationPage> {
       _errorMessage = null;
     });
 
-    final String apiUrl =
-        "${ApiConstants.baseUrl}:5000/api/auth/verify-reset-code";
+    final String apiUrl = "${ApiConstants.baseUrl}/api/auth/verify-reset-code";
 
     try {
       final response = await http.post(
@@ -293,8 +291,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
       _errorMessage = null;
     });
 
-    final String apiUrl =
-        "${ApiConstants.baseUrl}:5000/api/auth/reset-password";
+    final String apiUrl = "${ApiConstants.baseUrl}/api/auth/reset-password";
 
     try {
       final response = await http.post(

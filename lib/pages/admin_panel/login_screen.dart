@@ -34,7 +34,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     String password = passwordController.text.trim();
     bool isAdminLogin = widget.isAdminLogin;
 
-    var url = Uri.parse('${ApiConstants.baseUrl}:5000/api/auth/login');
+    var url = Uri.parse('${ApiConstants.baseUrl}/api/auth/login');
     var body = jsonEncode({
       'email': email,
       'password': password,

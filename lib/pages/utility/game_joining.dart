@@ -173,7 +173,7 @@ class GameJoiningPage extends StatelessWidget {
         return;
       }
 
-      final url = Uri.parse('${ApiConstants.baseUrl}:5000/api/game/joingame');
+      final url = Uri.parse('${ApiConstants.baseUrl}/api/game/joingame');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
