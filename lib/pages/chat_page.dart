@@ -39,10 +39,59 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    chatSubscription = _chatStream().listen((snapshot) {
-      // Map snapshot to your dms list like in your loadChats()
-      // and call setState()
+    chatSubscription = _chatStream().listen((snapshot) async {
+      List<Map<String, dynamic>> tempDms = [];
+      List<Map<String, dynamic>> tempGroups = [];
+
+      for (var doc in snapshot.docs) {
+        var chatData = doc.data() as Map<String, dynamic>;
+
+        if (chatData['type'] == 'direct') {
+          int unread = chatData['unreadCounts']?[currentUserId] ?? 0;
+
+          String otherUserId = (chatData['participants'] as List)
+              .firstWhere((id) => id != currentUserId, orElse: () => '');
+
+          if (otherUserId.isNotEmpty) {
+            var userData = await UserManager.getUserData(otherUserId);
+
+            if (userData != null) {
+              tempDms.add({
+                'id': doc.id,
+                'name': userData['name'] ?? 'Unknown User',
+                'message': chatData['lastMessage'] ?? 'Start a conversation',
+                'photoUrl': userData['photoUrl'] ?? '',
+                'timestamp': chatData['lastMessageTime'],
+                'unreadCount': unread,
+              });
+            }
+          }
+        } else if (chatData['type'] == 'group') {
+          // int unread = chatData['unreadCounts']?[currentUserId] ?? 0;
+
+          tempGroups.add({
+            'id': doc.id,
+            'name': chatData['name'] ?? 'Unnamed Group',
+            'message': chatData['lastMessage'] ?? 'Start a conversation',
+            'photoUrl': chatData['photoUrl'] ?? '', // Optional group image
+            'timestamp': chatData['lastMessageTime'],
+            // 'unreadCount': unread,
+          });
+        }
+      }
+
+      // Sort both lists by timestamp (latest on top)
+      tempDms.sort(
+          (a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp']));
+      tempGroups.sort(
+          (a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp']));
+
+      setState(() {
+        dms = tempDms;
+        groups = tempGroups;
+      });
     });
+
     UserManager.setupPresence();
     _loadUserId();
   }
@@ -420,21 +469,24 @@ class _ChatPageState extends State<ChatPage> {
                     child: ListView.builder(
                       itemCount: users.length,
                       itemBuilder: (context, index) {
-                        var userData =
-                            users[index].data() as Map<String, dynamic>;
+                        final user = users[index];
+                        final userName = user['name'] ?? 'Unknown User';
+                        final userId = user.id;
+
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: userData["photoUrl"] != null &&
-                                    userData["photoUrl"].toString().isNotEmpty
-                                ? FileImage(File(userData["photoUrl"]))
-                                : const AssetImage("assets/profile.png")
-                                    as ImageProvider,
+                            backgroundImage: user['photoUrl'] != null &&
+                                    user['photoUrl'].toString().isNotEmpty
+                                ? FileImage(File(user['photoUrl']))
+                                : null,
+                            child: user['photoUrl'] == null
+                                ? const Icon(Icons.person)
+                                : null,
                           ),
-                          title: Text(userData['name'] ?? 'Unknown User'),
+                          title: Text(userName),
                           onTap: () {
-                            createNewDm(users[index].id,
-                                userData['name'] ?? 'Unknown User');
                             Navigator.pop(context);
+                            createNewDm(userId, userName);
                           },
                         );
                       },
