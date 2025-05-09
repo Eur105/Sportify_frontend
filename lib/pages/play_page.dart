@@ -706,20 +706,27 @@ class _PlayPageState extends State<PlayPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on,
-                                          color: Colors.white70, size: 16),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "Venue: ${game["venueName"] ?? "Unknown"}",
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white70),
-                                      ),
-                                    ],
+                                  Flexible(
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.location_on,
+                                            color: Colors.white70, size: 16),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            "Venue: ${game["venueName"] ?? "Unknown"}",
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white70),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const Icon(Icons.calendar_today,
                                           color: Colors.white70, size: 16),
@@ -727,14 +734,14 @@ class _PlayPageState extends State<PlayPage> {
                                       Text(
                                         _formatDate(game["gameDate"]),
                                         style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white70,
-                                        ),
+                                            fontSize: 12,
+                                            color: Colors.white70),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
+
                               const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment:
@@ -1054,7 +1061,27 @@ class _PlayPageState extends State<PlayPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
+                                  Flexible(
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.location_on,
+                                            color: Colors.white70, size: 16),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            "Venue: ${game["venueName"] ?? "Unknown"}",
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white70),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const Icon(Icons.calendar_today,
                                           color: Colors.white70, size: 16),
@@ -1062,14 +1089,14 @@ class _PlayPageState extends State<PlayPage> {
                                       Text(
                                         _formatDate(game["gameDate"]),
                                         style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white70,
-                                        ),
+                                            fontSize: 12,
+                                            color: Colors.white70),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
+
                               const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment:

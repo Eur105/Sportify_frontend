@@ -65,11 +65,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         .get();
   }
 
+  Future<void> _reloadCount() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .update({
+        'unreadCounts.$currentUserId':
+            0, // Update the unread count for the current user
+      });
+      print("Unread count reset to zero for current user.");
+    } catch (e) {
+      print('Error resetting unread count: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     _loadUserId();
+    _reloadCount();
   }
 
   Widget build(BuildContext context) {
@@ -229,6 +245,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         'read': false,
       };
 
+      final messageText = _messageController.text;
+
+      // Clear input field immediately
+      _messageController.clear();
+
       // Add message to Firestore
       await FirebaseFirestore.instance
           .collection('chats')
@@ -236,17 +257,33 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           .collection('messages')
           .add(messageData);
 
-      // Update last message in chat document
+      // Fetch the chat document to get participant IDs
+      final chatDoc = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .get();
+
+      final chatData = chatDoc.data() as Map<String, dynamic>;
+      final List<dynamic> participants = chatData['participants'] ?? [];
+
+      // Build update map for unreadCounts
+      Map<String, dynamic> unreadUpdates = {};
+
+      for (var userId in participants) {
+        if (userId != currentUserId) {
+          unreadUpdates['unreadCounts.$userId'] = FieldValue.increment(1);
+        }
+      }
+
+      // Update last message and unreadCounts in chat document
       await FirebaseFirestore.instance
           .collection('chats')
           .doc(widget.chatId)
           .update({
-        'lastMessage': _messageController.text,
+        'lastMessage': messageText,
         'lastMessageTime': FieldValue.serverTimestamp(),
+        ...unreadUpdates,
       });
-
-      // Clear input field
-      _messageController.clear();
 
       // Scroll to bottom
       _scrollController.animateTo(
@@ -272,7 +309,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             .doc(widget.chatId)
             .collection('messages')
             .doc(message.id)
-            .update({'read': true});
+            .update({
+          'unreadCounts.${currentUserId}': 0,
+        });
       }
     }
   }

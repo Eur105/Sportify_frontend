@@ -213,7 +213,7 @@ class _BookingPageState extends State<BookingPage> {
           builder: (context) => AlertDialog(
             title: const Text("Booking Failed"),
             content: Text(
-              "An error occurred while processing your booking. Please try again. \n\nDetails: ${response.body}",
+              "A booking already exists in this time frame",
             ),
             actions: [
               TextButton(
@@ -229,7 +229,7 @@ class _BookingPageState extends State<BookingPage> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Error"),
-          content: Text("An unexpected error occurred: $e"),
+          content: Text("An unexpected error occurred"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),

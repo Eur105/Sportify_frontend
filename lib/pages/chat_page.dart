@@ -1,5 +1,6 @@
-// ignore_for_file: unused_import, unused_element, avoid_print, collection_methods_unrelated_type
+// ignore_for_file: unused_import, unused_element, avoid_print, collection_methods_unrelated_type, unused_local_variable
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -33,10 +34,15 @@ class _ChatPageState extends State<ChatPage> {
   //String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
   bool isLoading = true;
   String? currentUserId;
+  late StreamSubscription<QuerySnapshot> chatSubscription;
 
   @override
   void initState() {
     super.initState();
+    chatSubscription = _chatStream().listen((snapshot) {
+      // Map snapshot to your dms list like in your loadChats()
+      // and call setState()
+    });
     UserManager.setupPresence();
     _loadUserId();
   }
@@ -57,6 +63,7 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       isLoading = true;
     });
+    // int unread = 0;
 
     try {
       // Get DMs using ChatService
@@ -65,6 +72,8 @@ class _ChatPageState extends State<ChatPage> {
         List<Map<String, dynamic>> tempDms = [];
         for (var doc in snapshot.docs) {
           var chatData = doc.data() as Map<String, dynamic>;
+
+          int unread = chatData['unreadCounts']?[currentUserId] ?? 0;
 
           // Get other user ID
           String otherUserId = (chatData['participants'] as List)
@@ -83,6 +92,7 @@ class _ChatPageState extends State<ChatPage> {
                 'message': chatData['lastMessage'] ?? 'Start a conversation',
                 'photoUrl': userData['photoUrl'] ?? '',
                 'timestamp': chatData['lastMessageTime'],
+                'unreadCount': unread
               });
             }
           }
@@ -206,6 +216,12 @@ class _ChatPageState extends State<ChatPage> {
         }
       }
 
+      // Initialize unreadCounts map
+      Map<String, int> unreadCounts = {
+        currentUserId!: 0,
+        otherUserId: 0,
+      };
+
       // Create a new chat
       DocumentReference chatRef =
           await FirebaseFirestore.instance.collection('chats').add({
@@ -214,6 +230,7 @@ class _ChatPageState extends State<ChatPage> {
         'createdAt': FieldValue.serverTimestamp(),
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastMessage': 'New conversation started',
+        'unreadCounts': unreadCounts,
       });
 
       setState(() {
@@ -301,7 +318,9 @@ class _ChatPageState extends State<ChatPage> {
                           return const Text('No users found');
                         }
 
-                        final users = snapshot.data!;
+                        final users = snapshot.data!
+                            .where((user) => user['id'] != currentUserId)
+                            .toList();
 
                         return SizedBox(
                           height: 200,
@@ -348,7 +367,9 @@ class _ChatPageState extends State<ChatPage> {
                   onPressed: () {
                     if (groupNameController.text.isNotEmpty &&
                         selectedUsers.isNotEmpty) {
-                      createNewGroup(groupNameController.text, selectedUsers);
+                      createNewGroup(groupNameController.text,
+                          [...selectedUsers, currentUserId!]);
+
                       Navigator.pop(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -590,19 +611,14 @@ class _ChatPageState extends State<ChatPage> {
     return ListView.builder(
       itemCount: chatData.length,
       itemBuilder: (context, index) {
+        final unreadCount = chatData[index]['type'] == 'dm'
+            ? (chatData[index]['unreadCounts']?[currentUserId] ?? 0)
+            : 0;
+
         // First, check if the chat document exists in Firestore
         return FutureBuilder<bool>(
           future: _checkChatExists(chatData[index]["id"]),
           builder: (context, snapshot) {
-            // If we're still checking, show a placeholder or loading indicator
-            // if (snapshot.connectionState == ConnectionState.waiting) {
-            //   return const ListTile(
-            //     title: Text("Loading..."),
-            //     leading: CircleAvatar(
-            //         child: CircularProgressIndicator(strokeWidth: 2)),
-            //   );
-            // }
-
             // If the chat doesn't exist, don't show anything
             if (snapshot.data == false) {
               return const SizedBox.shrink();
@@ -610,15 +626,41 @@ class _ChatPageState extends State<ChatPage> {
 
             // If the chat exists, show the ListTile
             return ListTile(
-              leading: CircleAvatar(
-                backgroundImage: chatData[index]["photoUrl"] != null &&
-                        chatData[index]["photoUrl"].isNotEmpty
-                    ? FileImage(File(chatData[index]["photoUrl"]))
-                    : const AssetImage("assets/profile.png") as ImageProvider,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              leading: Padding(
+                padding: const EdgeInsets.only(
+                    left: 10.0), // Adjust profile left padding
+                child: CircleAvatar(
+                  backgroundImage: chatData[index]["photoUrl"] != null &&
+                          chatData[index]["photoUrl"].isNotEmpty
+                      ? FileImage(File(chatData[index]["photoUrl"]))
+                      : const AssetImage("assets/profile.png") as ImageProvider,
+                ),
               ),
               title: Text(chatData[index]["name"] ?? ""),
               subtitle: Text(chatData[index]["message"] ?? ""),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Unread count
+                  if (chatData[index]['type'] == 'dm' &&
+                      (chatData[index]['unreadCounts']?[currentUserId] ?? 0) >
+                          0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        radius: 10,
+                        backgroundColor: Colors.red,
+                        child: Text(
+                          '${chatData[index]['unreadCount']}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  const Icon(Icons.arrow_forward_ios, size: 16),
+                ],
+              ),
               onTap: () {
                 setState(() {
                   currentChatId = chatData[index]["id"];
@@ -638,6 +680,7 @@ class _ChatPageState extends State<ChatPage> {
                   loadChats();
                 });
               },
+              isThreeLine: true, // Allow enough space for the unread count
             );
           },
         );
@@ -667,6 +710,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     // Make sure to cancel any active listeners
     messageController.dispose();
+    chatSubscription.cancel();
     super.dispose();
   }
 }

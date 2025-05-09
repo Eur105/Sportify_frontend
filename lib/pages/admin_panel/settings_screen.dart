@@ -4,6 +4,7 @@ import 'package:sportify_final/pages/admin_panel/help_support_screen.dart';
 //import 'package:sportify_final/pages/admin_panel/login_screen.dart';
 import 'package:sportify_final/pages/admin_panel/profile_screen.dart';
 import 'package:sportify_final/pages/utility/role_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // Import login screen
 
 class SettingsScreen extends StatelessWidget {
@@ -135,18 +136,20 @@ class SettingsScreen extends StatelessWidget {
               child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
-              onPressed: () {
-                // Close the dialog
-                Navigator.pop(context);
+              onPressed: () async {
+                Navigator.pop(context); // Close the dialog
 
-                // Navigate back to Login Screen and remove all previous screens
+                // Get SharedPreferences instance
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+
+                // Remove the token
+                await prefs.remove('token');
+
+                // Navigate to RolePage and remove all previous routes
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const RolePage(),
-                  ),
-                  (Route<dynamic> route) =>
-                      false, // Remove all previous screens
+                  MaterialPageRoute(builder: (context) => const RolePage()),
+                  (Route<dynamic> route) => false,
                 );
               },
               child: const Text("Log Out", style: TextStyle(color: Colors.red)),

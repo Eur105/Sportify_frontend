@@ -108,13 +108,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          leading: IconButton(
-        icon: Icon(Icons.arrow_back), // Back arrow icon
-        onPressed: () {
-          Navigator.pop(context); // Navigates to the previous screen
-        },
-      )),
+      // appBar: AppBar(
+      //     leading: IconButton(
+      //   icon: Icon(Icons.arrow_back), // Back arrow icon
+      //   onPressed: () {
+      //     Navigator.pop(context); // Navigates to the previous screen
+      //   },
+      // )),
       backgroundColor: Colors.white,
       body: Center(
         child: Padding(
