@@ -115,7 +115,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       children: [
                         CircleAvatar(
                           backgroundImage: photoUrl.isNotEmpty
-                              ? FileImage(File(photoUrl))
+                              ? NetworkImage(photoUrl)
                               : const AssetImage("assets/default_avatar.png")
                                   as ImageProvider,
                         ),
@@ -617,7 +617,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           leading: CircleAvatar(
                             backgroundImage: member['photoUrl'] != null &&
                                     member['photoUrl'].isNotEmpty
-                                ? FileImage((File(member['photoUrl'])))
+                                ? NetworkImage(member['photoUrl'])
                                 : const AssetImage("assets/profile.png")
                                     as ImageProvider,
                           ),
@@ -767,7 +767,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     leading: CircleAvatar(
                       backgroundImage: member['photoUrl'] != null &&
                               member['photoUrl'].isNotEmpty
-                          ? FileImage(File(member['photoUrl']))
+                          ? NetworkImage(member['photoUrl'])
                           : const AssetImage("assets/profile.png")
                               as ImageProvider,
                     ),
@@ -969,7 +969,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             secondary: CircleAvatar(
                               backgroundImage: userData['photoUrl'] != null &&
                                       userData['photoUrl'].isNotEmpty
-                                  ? FileImage(File(userData['photoUrl']))
+                                  ? NetworkImage(userData['photoUrl'])
                                   : const AssetImage("assets/profile.png")
                                       as ImageProvider,
                             ),

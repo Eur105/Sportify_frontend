@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+// ignore_for_file: unused_element, unnecessary_null_comparison, use_build_context_synchronously
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:sportify_final/pages/utility/api_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -72,11 +73,42 @@ class _EditProfileState extends State<EditProfile> {
       return;
     }
 
+    String? imageUrl;
+    if (_image != null) {
+      try {
+        final bytes = await _image!.readAsBytes();
+        final fileExt = _image!.path.split('.').last;
+        final fileName = 'profile_picture_$userUuid.$fileExt';
+        final storageResponse = await Supabase.instance.client.storage
+            .from('chatimages')
+            .uploadBinary(fileName, bytes);
+
+        if (storageResponse != null) {
+          imageUrl = Supabase.instance.client.storage
+              .from('chatimages')
+              .getPublicUrl(fileName);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload profile picture.')),
+          );
+          return;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error uploading image: $e')),
+        );
+        return;
+      }
+    } else if (profilePicturePath != null &&
+        profilePicturePath!.startsWith('http')) {
+      imageUrl = profilePicturePath;
+    }
+
     final profileData = {
       "gender": selectedGender,
       "bio": bioController.text,
       "address": addressController.text,
-      "profilePicture": _image?.path ?? ""
+      "profilePicture": imageUrl ?? ""
     };
 
     final response = await http.put(
@@ -86,13 +118,15 @@ class _EditProfileState extends State<EditProfile> {
     );
 
     if (response.statusCode == 200) {
-      // **Save data in SharedPreferences**
       await prefs.setString('gender', selectedGender);
       await prefs.setString('bio', bioController.text);
       await prefs.setString('address', addressController.text);
 
-      if (_image != null) {
-        await prefs.setString('profilePicture', _image!.path);
+      if (imageUrl != null) {
+        await prefs.setString('profilePicture', imageUrl);
+      } else if (_image == null &&
+          !(profilePicturePath?.startsWith('http') ?? false)) {
+        await prefs.remove('profilePicture');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -245,12 +279,13 @@ class _EditProfileState extends State<EditProfile> {
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: _image != null
-                        ? FileImage(_image!) // If a new image is picked, use it
+                        ? FileImage(_image!) // Display the locally picked image
                         : (profilePicturePath != null &&
-                                    profilePicturePath!.isNotEmpty
-                                ? FileImage(File(profilePicturePath!))
-                                : const AssetImage("assets/profile.png"))
-                            as ImageProvider,
+                                profilePicturePath!.startsWith('http')
+                            ? NetworkImage(
+                                profilePicturePath!) // Display the Supabase URL
+                            : const AssetImage(
+                                "assets/profile.png")) as ImageProvider,
                   ),
                   const SizedBox(height: 10),
                   TextButton(

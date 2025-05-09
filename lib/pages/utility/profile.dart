@@ -127,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   radius: isSmallScreen ? 35 : 40, // Responsive avatar size
                   backgroundImage: profilePicturePath != null &&
                           profilePicturePath!.isNotEmpty
-                      ? FileImage(File(profilePicturePath!))
+                      ? NetworkImage(profilePicturePath!)
                       : const AssetImage('assets/profile.png') as ImageProvider,
                 ),
                 SizedBox(height: isSmallScreen ? 8 : 10), // Responsive spacing

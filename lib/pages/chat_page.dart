@@ -385,9 +385,8 @@ class _ChatPageState extends State<ChatPage> {
                               return CheckboxListTile(
                                 title: Text(user['name'] ?? 'No Name'),
                                 secondary: CircleAvatar(
-                                  backgroundImage:
-                                      FileImage(File(user['photoUrl'] ?? '')),
-                                ),
+                                    backgroundImage:
+                                        NetworkImage(user['photoUrl'])),
                                 value: isSelected,
                                 onChanged: (bool? value) {
                                   setState(() {
@@ -477,7 +476,7 @@ class _ChatPageState extends State<ChatPage> {
                           leading: CircleAvatar(
                             backgroundImage: user['photoUrl'] != null &&
                                     user['photoUrl'].toString().isNotEmpty
-                                ? FileImage(File(user['photoUrl']))
+                                ? NetworkImage(user['photoUrl'])
                                 : null,
                             child: user['photoUrl'] == null
                                 ? const Icon(Icons.person)
@@ -599,7 +598,10 @@ class _ChatPageState extends State<ChatPage> {
           }
         },
         backgroundColor: Colors.green,
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
       bottomNavigationBar: BottomNavbar(),
     );
@@ -681,7 +683,7 @@ class _ChatPageState extends State<ChatPage> {
                     child: CircleAvatar(
                       backgroundImage: chatData[index]["photoUrl"] != null &&
                               chatData[index]["photoUrl"].isNotEmpty
-                          ? FileImage(File(chatData[index]["photoUrl"]))
+                          ? NetworkImage(chatData[index]['photoUrl'])
                           : const AssetImage("assets/profile.png")
                               as ImageProvider,
                     ),
@@ -696,7 +698,7 @@ class _ChatPageState extends State<ChatPage> {
                           padding: const EdgeInsets.only(right: 8.0),
                           child: CircleAvatar(
                             radius: 10,
-                            backgroundColor: Colors.red,
+                            backgroundColor: Colors.green,
                             child: Text(
                               '${chatData[index]['unreadCount']}',
                               style: const TextStyle(
@@ -735,7 +737,7 @@ class _ChatPageState extends State<ChatPage> {
                     child: CircleAvatar(
                       backgroundImage: chatData[index]["photoUrl"] != null &&
                               chatData[index]["photoUrl"].isNotEmpty
-                          ? FileImage(File(chatData[index]["photoUrl"]))
+                          ? NetworkImage(chatData[index]['photoUrl'])
                           : const AssetImage("assets/profile.png")
                               as ImageProvider,
                     ),

@@ -193,7 +193,7 @@ class _ViewProfileState extends State<ViewProfile> {
                               isSmallScreen ? 40 : 50, // Responsive avatar size
                           backgroundImage: profilePicturePath != null &&
                                   profilePicturePath!.isNotEmpty
-                              ? FileImage(File(profilePicturePath!))
+                              ? NetworkImage(profilePicturePath!)
                               : AssetImage("assets/picture/profile.png")
                                   as ImageProvider,
                         ),
