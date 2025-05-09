@@ -172,10 +172,10 @@ class ChatService {
   static Future<String?> createGroupChat(
       String groupName, List<String> memberIds) async {
     try {
-      // Ensure current user is included
-      // if (!memberIds.contains(currentUserId)) {
-      //   memberIds.add(currentUserId);
-      // }
+      //Ensure current user is included
+      if (!memberIds.contains(currentUserId)) {
+        memberIds.add(currentUserId);
+      }
       String creatorname = await _getUserName(currentUserId);
 
       // Create new group chat

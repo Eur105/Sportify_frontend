@@ -611,79 +611,108 @@ class _ChatPageState extends State<ChatPage> {
     return ListView.builder(
       itemCount: chatData.length,
       itemBuilder: (context, index) {
-        final unreadCount = chatData[index]['type'] == 'dm'
-            ? (chatData[index]['unreadCounts']?[currentUserId] ?? 0)
-            : 0;
-
         // First, check if the chat document exists in Firestore
         return FutureBuilder<bool>(
-          future: _checkChatExists(chatData[index]["id"]),
-          builder: (context, snapshot) {
-            // If the chat doesn't exist, don't show anything
-            if (snapshot.data == false) {
-              return const SizedBox.shrink();
-            }
+            future: _checkChatExists(chatData[index]["id"]),
+            builder: (context, snapshot) {
+              // If the chat doesn't exist, don't show anything
+              if (snapshot.data == false) {
+                return const SizedBox.shrink();
+              }
 
-            // If the chat exists, show the ListTile
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              leading: Padding(
-                padding: const EdgeInsets.only(
-                    left: 10.0), // Adjust profile left padding
-                child: CircleAvatar(
-                  backgroundImage: chatData[index]["photoUrl"] != null &&
-                          chatData[index]["photoUrl"].isNotEmpty
-                      ? FileImage(File(chatData[index]["photoUrl"]))
-                      : const AssetImage("assets/profile.png") as ImageProvider,
-                ),
-              ),
-              title: Text(chatData[index]["name"] ?? ""),
-              subtitle: Text(chatData[index]["message"] ?? ""),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Unread count
-                  if (chatData[index]['type'] == 'dm' &&
-                      (chatData[index]['unreadCounts']?[currentUserId] ?? 0) >
-                          0)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.red,
-                        child: Text(
-                          '${chatData[index]['unreadCount']}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  const Icon(Icons.arrow_forward_ios, size: 16),
-                ],
-              ),
-              onTap: () {
-                setState(() {
-                  currentChatId = chatData[index]["id"];
-                });
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatDetailPage(
-                      chatId: chatData[index]["id"],
-                      chatName: chatData[index]["name"],
-                      isGroup: !showDms, // Add this parameter
+              // If the chat exists, show the ListTile
+              if (showDms) {
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: CircleAvatar(
+                      backgroundImage: chatData[index]["photoUrl"] != null &&
+                              chatData[index]["photoUrl"].isNotEmpty
+                          ? FileImage(File(chatData[index]["photoUrl"]))
+                          : const AssetImage("assets/profile.png")
+                              as ImageProvider,
                     ),
                   ),
-                ).then((_) {
-                  // This ensures state is refreshed when returning from ChatDetailPage
-                  loadChats();
-                });
-              },
-              isThreeLine: true, // Allow enough space for the unread count
-            );
-          },
-        );
+                  title: Text(chatData[index]["name"] ?? ""),
+                  subtitle: Text(chatData[index]["message"] ?? ""),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (chatData[index]['unreadCount'] > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: CircleAvatar(
+                            radius: 10,
+                            backgroundColor: Colors.red,
+                            child: Text(
+                              '${chatData[index]['unreadCount']}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
+                  onTap: () {
+                    setState(() {
+                      currentChatId = chatData[index]["id"];
+                    });
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatDetailPage(
+                          chatId: chatData[index]["id"],
+                          chatName: chatData[index]["name"],
+                          isGroup: !showDms,
+                        ),
+                      ),
+                    ).then((_) {
+                      loadChats();
+                    });
+                  },
+                  isThreeLine: true,
+                );
+              } else {
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: CircleAvatar(
+                      backgroundImage: chatData[index]["photoUrl"] != null &&
+                              chatData[index]["photoUrl"].isNotEmpty
+                          ? FileImage(File(chatData[index]["photoUrl"]))
+                          : const AssetImage("assets/profile.png")
+                              as ImageProvider,
+                    ),
+                  ),
+                  title: Text(chatData[index]["name"] ?? ""),
+                  subtitle: Text(chatData[index]["message"] ?? ""),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    setState(() {
+                      currentChatId = chatData[index]["id"];
+                    });
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatDetailPage(
+                          chatId: chatData[index]["id"],
+                          chatName: chatData[index]["name"],
+                          isGroup: !showDms,
+                        ),
+                      ),
+                    ).then((_) {
+                      loadChats();
+                    });
+                  },
+                  isThreeLine: true,
+                );
+              }
+            });
       },
     );
   }
