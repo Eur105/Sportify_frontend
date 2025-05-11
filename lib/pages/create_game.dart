@@ -29,6 +29,7 @@ class _CreateGameState extends State<CreateGame> {
   bool lookingForOpponent = false;
   bool needPlayers = false;
   bool isLoading = false;
+  String _formattedTimeSlot = "";
 
   String? userEmail;
   String fullName = "";
@@ -72,43 +73,23 @@ class _CreateGameState extends State<CreateGame> {
     }
   }
 
-  Future<void> _selectTime(
-    BuildContext context,
-    TextEditingController controller,
-    TimeOfDay? startTime,
-  ) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (BuildContext context, Widget? child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      if (startTime != null && picked.hour < startTime.hour ||
-          (picked.hour == startTime!.hour &&
-              picked.minute < startTime.minute)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("End time cannot be before start time."),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      } else {
-        controller.text = picked.format(context);
-      }
+  void _updateTimeSlot() {
+    if (startTimeController.text.isNotEmpty &&
+        endTimeController.text.isNotEmpty) {
+      setState(() {
+        _formattedTimeSlot =
+            "${startTimeController.text}-${endTimeController.text}";
+      });
     }
   }
 
-  Future<void> _selectStartTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+  Future _selectTime(BuildContext context, TextEditingController controller,
+      String type) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (BuildContext context, Widget? child) {
+        // Remove the 24-hour format to ensure AM/PM is available
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
           child: child!,
@@ -116,12 +97,101 @@ class _CreateGameState extends State<CreateGame> {
       },
     );
 
-    if (picked != null) {
-      setState(() {
-        startTimeController.text = picked.format(context);
-        startTime = picked;
-      });
+    if (pickedTime != null) {
+      // Format time with AM/PM
+      final String formattedTime = _formatTimeWithAmPm(pickedTime, context);
+
+      if (type == "end" && startTimeController.text.isNotEmpty) {
+        final start = _parseTimeOfDay(startTimeController.text);
+        final end = pickedTime;
+
+        // Handle time range validation with special handling for overnight bookings
+        if (!_isValidTimeRange(start, end)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  "Invalid time range. For overnight bookings, start time should be in the evening and end time in the morning."),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      if (type == "start" && endTimeController.text.isNotEmpty) {
+        final start = pickedTime;
+        final end = _parseTimeOfDay(endTimeController.text);
+
+        // Handle time range validation with special handling for overnight bookings
+        if (!_isValidTimeRange(start, end)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  "Invalid time range. For overnight bookings, start time should be in the evening and end time in the morning."),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      controller.text = formattedTime;
+      _updateTimeSlot();
     }
+  }
+
+// Format time with explicit AM/PM
+  String _formatTimeWithAmPm(TimeOfDay time, BuildContext context) {
+    // Use the hour and minute values to create a custom format with AM/PM
+    final int hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final String minute = time.minute.toString().padLeft(2, '0');
+    final String period = time.period == DayPeriod.am ? 'AM' : 'PM';
+
+    return '$hour:$minute $period';
+  }
+
+  TimeOfDay _parseTimeOfDay(String timeString) {
+    final parts = timeString.split(RegExp('[: ]'));
+    int hour = int.parse(parts[0]);
+    int minute = int.parse(parts[1]);
+    String period = parts[2].toUpperCase();
+
+    if (period == 'PM' && hour != 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
+
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+// Convert TimeOfDay to DateTime for easier comparison
+  DateTime _timeOfDayToDateTime(TimeOfDay time) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, time.hour, time.minute);
+  }
+
+// Check if a time range is valid, with special handling for overnight bookings
+  bool _isValidTimeRange(TimeOfDay start, TimeOfDay end) {
+    DateTime dtStart = _timeOfDayToDateTime(start);
+    DateTime dtEnd = _timeOfDayToDateTime(end);
+
+    // If end time is earlier than start time, we need to check if it's a reasonable overnight booking
+    if (dtEnd.isBefore(dtStart) || dtEnd.isAtSameMomentAs(dtStart)) {
+      // For overnight bookings, typically the end time should be within a reasonable
+      // timeframe after midnight (e.g., 11 PM to 2 AM makes sense, but 9 PM to 8 PM doesn't)
+
+      // Convert to minutes since midnight for easier comparison
+      int startMinutes = start.hour * 60 + start.minute;
+      int endMinutes = end.hour * 60 + end.minute;
+
+      // Check if start time is in the evening (after 6 PM) and end time is in the morning (before noon)
+      bool startInEvening = startMinutes >= 18 * 60; // After 6 PM
+      bool endInMorning = endMinutes < 12 * 60; // Before noon
+
+      // For a valid overnight booking: start should be evening, end should be morning
+      return startInEvening && endInMorning;
+    }
+
+    // Normal same-day booking where end is after start
+    return dtEnd.isAfter(dtStart);
   }
 
   Future<void> _createGame() async {
@@ -140,7 +210,7 @@ class _CreateGameState extends State<CreateGame> {
       "userEmail": userEmail!,
       "sportType": selectedGame!,
       "gameDate": dateController.text,
-      "gameTime": "${startTimeController.text} - ${endTimeController.text}",
+      "gameTime": _formattedTimeSlot,
       "visibility": visibility,
       "venueName": venueName!,
       "hostTeamSize": playersNeededController.text,
@@ -262,7 +332,8 @@ class _CreateGameState extends State<CreateGame> {
                             readOnly: true,
                             decoration:
                                 const InputDecoration(labelText: 'Start Time'),
-                            onTap: () => _selectStartTime(context),
+                            onTap: () => _selectTime(
+                                context, startTimeController, "start"),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -272,8 +343,8 @@ class _CreateGameState extends State<CreateGame> {
                             readOnly: true,
                             decoration:
                                 const InputDecoration(labelText: 'End Time'),
-                            onTap: () => _selectTime(
-                                context, endTimeController, startTime),
+                            onTap: () =>
+                                _selectTime(context, endTimeController, "end"),
                           ),
                         ),
                       ],

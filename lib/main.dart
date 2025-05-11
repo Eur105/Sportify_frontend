@@ -105,7 +105,7 @@ class _MyAppState extends State<MyApp> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             NotificationManager().initialize(context);
           });
-          return SplashPage(); // Splash/Login
+          return RolePage(); // Splash/Login
         },
       ),
     );

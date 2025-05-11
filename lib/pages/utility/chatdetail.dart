@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import, unused_element, unused_local_variable
+// ignore_for_file: unused_import, unused_element, unused_local_variable, use_build_context_synchronously
 
 import 'dart:io';
 
@@ -840,7 +840,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           .doc(widget.chatId)
           .collection('messages')
           .add({
-        'senderId': 'currentUserId',
+        'senderId': 'system',
         'text': '$userName was removed from the group',
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,

@@ -31,6 +31,8 @@ class _EditProfileState extends State<EditProfile> {
   final TextEditingController bioController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   String? profilePicturePath;
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -65,27 +67,42 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _saveProfile() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final userUuid = prefs.getString('userUuid');
+    setState(() {
+      _isSaving = true;
+    });
 
     if (userUuid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not logged in!')),
       );
+      setState(() {
+        _isSaving = false;
+      });
       return;
     }
 
+    final bucketName = 'chatimages';
     String? imageUrl;
+
     if (_image != null) {
       try {
+        // Upload new image (with upsert to overwrite existing one)
         final bytes = await _image!.readAsBytes();
         final fileExt = _image!.path.split('.').last;
         final fileName = 'profile_picture_$userUuid.$fileExt';
+
         final storageResponse = await Supabase.instance.client.storage
-            .from('chatimages')
-            .uploadBinary(fileName, bytes);
+            .from(bucketName)
+            .uploadBinary(
+              fileName,
+              bytes,
+              fileOptions:
+                  const FileOptions(cacheControl: '3600', upsert: true),
+            );
 
         if (storageResponse != null) {
           imageUrl = Supabase.instance.client.storage
-              .from('chatimages')
+              .from(bucketName)
               .getPublicUrl(fileName);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -104,6 +121,7 @@ class _EditProfileState extends State<EditProfile> {
       imageUrl = profilePicturePath;
     }
 
+    // Update profile data on your backend
     final profileData = {
       "gender": selectedGender,
       "bio": bioController.text,
@@ -141,6 +159,9 @@ class _EditProfileState extends State<EditProfile> {
         const SnackBar(content: Text('Failed to update profile')),
       );
     }
+    setState(() {
+      _isSaving = false;
+    });
   }
 
   void _editField(String field, TextEditingController controller) {
@@ -255,16 +276,23 @@ class _EditProfileState extends State<EditProfile> {
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           TextButton(
-            onPressed: isChanged
-                ? _saveProfile
-                : null, // Calls API when button is enabled
-            child: Text(
-              "Save Changes",
-              style: TextStyle(
-                color: isChanged ? Colors.green : Colors.grey,
-                fontSize: 16,
-              ),
-            ),
+            onPressed: isChanged && !_isSaving ? _saveProfile : null,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.green,
+                    ),
+                  )
+                : Text(
+                    "Save Changes",
+                    style: TextStyle(
+                      color: isChanged ? Colors.green : Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ],
       ),

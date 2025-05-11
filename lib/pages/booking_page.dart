@@ -62,30 +62,34 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context,
-      TextEditingController controller, String type) async {
+  Future _selectTime(BuildContext context, TextEditingController controller,
+      String type) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (BuildContext context, Widget? child) {
+        // Remove the 24-hour format to ensure AM/PM is available
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
           child: child!,
         );
       },
     );
 
     if (pickedTime != null) {
-      final String formattedTime = pickedTime.format(context);
+      // Format time with AM/PM
+      final String formattedTime = _formatTimeWithAmPm(pickedTime, context);
 
       if (type == "end" && startTimeController.text.isNotEmpty) {
         final start = _parseTimeOfDay(startTimeController.text);
         final end = pickedTime;
 
-        if (_isBefore(end, start)) {
+        // Handle time range validation with special handling for overnight bookings
+        if (!_isValidTimeRange(start, end)) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("End time cannot be before start time."),
+              content: Text(
+                  "Invalid time range. For overnight bookings, start time should be in the evening and end time in the morning."),
               backgroundColor: Colors.red,
             ),
           );
@@ -97,10 +101,12 @@ class _BookingPageState extends State<BookingPage> {
         final start = pickedTime;
         final end = _parseTimeOfDay(endTimeController.text);
 
-        if (_isBefore(end, start)) {
+        // Handle time range validation with special handling for overnight bookings
+        if (!_isValidTimeRange(start, end)) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Start time cannot be after end time."),
+              content: Text(
+                  "Invalid time range. For overnight bookings, start time should be in the evening and end time in the morning."),
               backgroundColor: Colors.red,
             ),
           );
@@ -113,27 +119,58 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
+// Format time with explicit AM/PM
+  String _formatTimeWithAmPm(TimeOfDay time, BuildContext context) {
+    // Use the hour and minute values to create a custom format with AM/PM
+    final int hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final String minute = time.minute.toString().padLeft(2, '0');
+    final String period = time.period == DayPeriod.am ? 'AM' : 'PM';
+
+    return '$hour:$minute $period';
+  }
+
   TimeOfDay _parseTimeOfDay(String timeString) {
     final parts = timeString.split(RegExp('[: ]'));
     int hour = int.parse(parts[0]);
     int minute = int.parse(parts[1]);
-    String period = parts[2].toLowerCase();
+    String period = parts[2].toUpperCase();
 
-    if (period == 'pm' && hour != 12) hour += 12;
-    if (period == 'am' && hour == 12) hour = 0;
+    if (period == 'PM' && hour != 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
 
     return TimeOfDay(hour: hour, minute: minute);
   }
 
+// Convert TimeOfDay to DateTime for easier comparison
   DateTime _timeOfDayToDateTime(TimeOfDay time) {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day, time.hour, time.minute);
   }
 
-  bool _isBefore(TimeOfDay t1, TimeOfDay t2) {
-    final dt1 = _timeOfDayToDateTime(t1);
-    final dt2 = _timeOfDayToDateTime(t2);
-    return dt1.isBefore(dt2);
+// Check if a time range is valid, with special handling for overnight bookings
+  bool _isValidTimeRange(TimeOfDay start, TimeOfDay end) {
+    DateTime dtStart = _timeOfDayToDateTime(start);
+    DateTime dtEnd = _timeOfDayToDateTime(end);
+
+    // If end time is earlier than start time, we need to check if it's a reasonable overnight booking
+    if (dtEnd.isBefore(dtStart) || dtEnd.isAtSameMomentAs(dtStart)) {
+      // For overnight bookings, typically the end time should be within a reasonable
+      // timeframe after midnight (e.g., 11 PM to 2 AM makes sense, but 9 PM to 8 PM doesn't)
+
+      // Convert to minutes since midnight for easier comparison
+      int startMinutes = start.hour * 60 + start.minute;
+      int endMinutes = end.hour * 60 + end.minute;
+
+      // Check if start time is in the evening (after 6 PM) and end time is in the morning (before noon)
+      bool startInEvening = startMinutes >= 18 * 60; // After 6 PM
+      bool endInMorning = endMinutes < 12 * 60; // Before noon
+
+      // For a valid overnight booking: start should be evening, end should be morning
+      return startInEvening && endInMorning;
+    }
+
+    // Normal same-day booking where end is after start
+    return dtEnd.isAfter(dtStart);
   }
 
   Future<void> _bookVenue() async {

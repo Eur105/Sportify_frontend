@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:sportify_final/pages/login_page.dart';
 import 'package:sportify_final/pages/utility/api_constants.dart';
+import 'package:sportify_final/pages/utility/verify_email.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -30,6 +31,7 @@ class _SignupPageState extends State<SignupPage> {
   bool _isMinLengthValid = false;
   bool _hasNumber = false;
   bool _hasSpecialChar = false;
+  bool isSigningUp = false;
 
   void _validatePasswordRealTime(String value) {
     setState(() {
@@ -65,36 +67,51 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('${ApiConstants.baseUrl}/api/auth/signup');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'firstName': _firstnameController.text,
-          'lastName': _lastnameController.text,
-          'email': _emailController.text,
-          'phoneNo': _phoneController.text,
-          'password': _passwordController.text,
-          'confirmPassword': _confirmPasswordController.text,
-          'userName': _usernameController.text,
-        }),
-      );
+      setState(() {
+        isSigningUp = true;
+      });
 
-      final responseData = jsonDecode(response.body);
+      try {
+        final url = Uri.parse('${ApiConstants.baseUrl}/api/auth/signup');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'firstName': _firstnameController.text,
+            'lastName': _lastnameController.text,
+            'email': _emailController.text,
+            'phoneNo': _phoneController.text,
+            'password': _passwordController.text,
+            'confirmPassword': _confirmPasswordController.text,
+            'userName': _usernameController.text,
+          }),
+        );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Signup Successful!")),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    OtpVerificationPage(email: _emailController.text)),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(responseData['message'] ?? "Signup Failed")),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Signup Successful!")),
+          SnackBar(content: Text("An error occurred: $e")),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-          (Route<dynamic> route) => false,
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['message'] ?? "Signup Failed")),
-        );
+      } finally {
+        setState(() {
+          isSigningUp = false;
+        });
       }
     }
   }
@@ -229,13 +246,25 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _signup,
+                    onPressed: isSigningUp ? null : _signup,
                     style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    child: Text("Signup",
-                        style: TextStyle(
-                            fontSize: isSmallScreen ? 18 : 20,
-                            color: Colors.white)), //Responsive font size
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: isSigningUp
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "Signup",
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 18 : 20,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 20),

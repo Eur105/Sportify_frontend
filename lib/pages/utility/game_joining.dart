@@ -5,18 +5,26 @@ import 'dart:convert';
 
 import 'package:sportify_final/pages/utility/api_constants.dart';
 
-class GameJoiningPage extends StatelessWidget {
+class GameJoiningPage extends StatefulWidget {
   final Map<String, String> gameDetails;
-  final Color backgroundGrey = const Color(0xFFF5F5F5);
   final String role; // Either "Player" or "Opponent"
-  final String uuid; // Game UUID
-
-  const GameJoiningPage({
+  final String uuid;
+  GameJoiningPage({
     Key? key,
     required this.gameDetails,
     required this.role,
     required this.uuid,
   }) : super(key: key);
+
+  @override
+  State<GameJoiningPage> createState() => _GameJoiningPageState();
+}
+
+class _GameJoiningPageState extends State<GameJoiningPage> {
+  final Color backgroundGrey = const Color(0xFFF5F5F5);
+
+  // Game UUID
+  bool _isRequesting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +73,7 @@ class GameJoiningPage extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                "You're Joining as a $role",
+                "You're Joining as a ${widget.role}",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -90,15 +98,15 @@ class GameJoiningPage extends StatelessWidget {
         child: Column(
           children: [
             _buildDetailRow(Icons.sports_soccer, "Sport Type",
-                gameDetails["sportType"] ?? "Unknown"),
-            _buildDetailRow(
-                Icons.person, "Host", gameDetails["fullName"] ?? "Unknown"),
+                widget.gameDetails["sportType"] ?? "Unknown"),
+            _buildDetailRow(Icons.person, "Host",
+                widget.gameDetails["fullName"] ?? "Unknown"),
             _buildDetailRow(Icons.location_on, "Venue",
-                gameDetails["venueName"] ?? "Unknown"),
+                widget.gameDetails["venueName"] ?? "Unknown"),
             _buildDetailRow(Icons.calendar_today, "Date",
-                gameDetails["gameDate"] ?? "Unknown"),
+                widget.gameDetails["gameDate"] ?? "Unknown"),
             _buildDetailRow(Icons.access_time, "Time",
-                gameDetails["gameTime"] ?? "Unknown"),
+                widget.gameDetails["gameTime"] ?? "Unknown"),
           ],
         ),
       ),
@@ -108,28 +116,37 @@ class GameJoiningPage extends StatelessWidget {
   /// Builds the join button
   Widget _buildJoinButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => _requestToJoinGame(context),
+      onPressed: _isRequesting ? null : () => _requestToJoinGame(context),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 6,
       ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.sports_handball, color: Colors.white, size: 22),
-          SizedBox(width: 8),
-          Text(
-            "Request To Join",
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+      child: _isRequesting
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sports_handball, color: Colors.white, size: 22),
+                SizedBox(width: 8),
+                Text(
+                  "Request To Join",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -171,6 +188,10 @@ class GameJoiningPage extends StatelessWidget {
 
   /// Function to request to join a game
   Future<void> _requestToJoinGame(BuildContext context) async {
+    setState(() {
+      _isRequesting = true;
+    });
+
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       String? userUuid = prefs.getString('userUuid'); // Get user UUID
@@ -188,8 +209,8 @@ class GameJoiningPage extends StatelessWidget {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userId': userUuid,
-          'gameId': uuid,
-          'role': role,
+          'gameId': widget.uuid,
+          'role': widget.role,
         }),
       );
 
@@ -208,6 +229,10 @@ class GameJoiningPage extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+    } finally {
+      setState(() {
+        _isRequesting = false;
+      });
     }
   }
 }

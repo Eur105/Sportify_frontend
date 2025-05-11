@@ -29,6 +29,10 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
 
   Future<void> moveToHome(BuildContext context) async {
+    setState(() {
+      isLoading = true; // Start loader
+    });
+
     if (_formKey.currentState!.validate()) {
       final url = Uri.parse('${ApiConstants.baseUrl}/api/auth/login');
       final response = await http.post(
@@ -44,14 +48,11 @@ class _LoginPageState extends State<LoginPage> {
       final responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['token'] != null) {
-        // Store data in SharedPreferences
-
         final SharedPreferences prefs = await SharedPreferences.getInstance();
 
         await prefs.setString('token', responseData['token']);
         await prefs.setString('email', _emailcontroller.text);
 
-        // Extract user details
         Map<String, dynamic> user = responseData['user'];
 
         await prefs.setInt('userId', user['id']);
@@ -61,26 +62,19 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('lastName', user['lastName']);
         await prefs.setString('phoneNo', user['phoneNo']);
         await prefs.setString('role', user['role']);
-
         await prefs.setString('address', user['address'] ?? "");
-        await prefs.setString(
-            'gender', user['gender'] ?? "Male"); // Default gender
+        await prefs.setString('gender', user['gender'] ?? "Male");
         await prefs.setString('profilePicture', user['profilePicture'] ?? "");
 
         if (responseData['userbio'] != null) {
           Map<String, dynamic> userbio = responseData['userbio'];
-
           await prefs.setString('bioDescription', userbio['description'] ?? "");
           await prefs.setString('bioSkillLevel', userbio['skillLevel'] ?? "");
-          // await prefs.setInt('bioExperience', userbio['experience'] ?? 0);
         } else {
-          // Store default values if userbio is null
           await prefs.setString('bioDescription', "");
           await prefs.setString('bioSkillLevel', "");
-          // await prefs.setInt('bioExperience', 0);
         }
 
-        // Store optional fields if they are not null
         if (user['gender'] != null)
           await prefs.setString('gender', user['gender']);
         if (user['address'] != null)
@@ -92,17 +86,21 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful!')),
         );
+
         storeFcmToken(user['uuid']);
+
+        // Stop loader before navigating
+        setState(() {
+          isLoading = false;
+        });
 
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => Homepage()),
-          (Route<dynamic> route) => false, // Removes all previous routes
+          (Route<dynamic> route) => false,
         );
       } else {
-        // Handling backend error messages
         String errorMessage = "Login failed. Please try again.";
-
         if (response.statusCode == 400) {
           errorMessage =
               responseData['message'] ?? "Invalid email or password.";
@@ -112,10 +110,20 @@ class _LoginPageState extends State<LoginPage> {
           errorMessage = "User not found.";
         }
 
+        // Show error and stop loader
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
+
+        setState(() {
+          isLoading = false;
+        });
       }
+    } else {
+      // Stop loader if validation fails
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -297,7 +305,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : () => moveToHome(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: isLoading
@@ -312,10 +320,10 @@ class _LoginPageState extends State<LoginPage> {
                         : Text(
                             "Login",
                             style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isSmallScreen
-                                    ? 16
-                                    : 18), // Adjust font size
+                              color: Colors.white,
+                              fontSize:
+                                  isSmallScreen ? 16 : 18, // Adjust font size
+                            ),
                           ),
                   ),
                 ),
