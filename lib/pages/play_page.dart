@@ -1017,7 +1017,8 @@ class _PlayPageState extends State<PlayPage> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.green,
-                                Colors.purpleAccent.shade200,
+                                Colors.green
+                                // Colors.purpleAccent.shade200,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
