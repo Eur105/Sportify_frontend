@@ -26,7 +26,7 @@ class _ViewSettingsState extends State<ViewSettings> {
           "Settings",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         centerTitle: true,
       ),
       body: ListView(

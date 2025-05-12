@@ -156,7 +156,7 @@ class _ViewGameDetailsState extends State<ViewGameDetails> {
           "Game Details",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         centerTitle: true,
       ),
       body: gameData == null || hostData == null

@@ -271,7 +271,7 @@ class _EditProfileState extends State<EditProfile> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         title: const Text("Edit Profile",
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
@@ -283,13 +283,13 @@ class _EditProfileState extends State<EditProfile> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.green,
+                      color: Colors.white,
                     ),
                   )
                 : Text(
                     "Save Changes",
                     style: TextStyle(
-                      color: isChanged ? Colors.green : Colors.grey,
+                      color: isChanged ? Colors.white : Colors.black,
                       fontSize: 16,
                     ),
                   ),

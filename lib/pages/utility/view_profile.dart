@@ -155,7 +155,7 @@ class _ViewProfileState extends State<ViewProfile> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         title: const Text(
           "Profile",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -164,7 +164,10 @@ class _ViewProfileState extends State<ViewProfile> {
         actions: isOwnProfile
             ? [
                 IconButton(
-                  icon: const Icon(Icons.edit),
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.black,
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -227,7 +230,7 @@ class _ViewProfileState extends State<ViewProfile> {
                   _buildDivider(),
                   SizedBox(
                       height: isSmallScreen ? 12 : 16), // Responsive spacing
-                  _buildGameStatsSection(),
+                  // _buildGameStatsSection(),
                   SizedBox(
                       height: isSmallScreen ? 12 : 16), // Responsive spacing
                   _buildDivider(),
@@ -399,23 +402,23 @@ class _ViewProfileState extends State<ViewProfile> {
     );
   }
 
-  Widget _buildGameStatsSection() {
-    // double winRate = wins / matchesPlayed;
-    // double lossRate = losses / matchesPlayed;
+  // Widget _buildGameStatsSection() {
+  //   // double winRate = wins / matchesPlayed;
+  //   // double lossRate = losses / matchesPlayed;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Game Stats",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        SizedBox(height: 10),
-        _buildProgressBar("Wins", wins, matchesPlayed, Colors.green),
-        _buildProgressBar("Losses", losses, matchesPlayed, Colors.red),
-        _buildProgressBar(
-            "Total Matches", matchesPlayed, matchesPlayed, Colors.blue),
-      ],
-    );
-  }
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text("Game Stats",
+  //           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+  //       SizedBox(height: 10),
+  //       _buildProgressBar("Wins", wins, matchesPlayed, Colors.green),
+  //       _buildProgressBar("Losses", losses, matchesPlayed, Colors.red),
+  //       _buildProgressBar(
+  //           "Total Matches", matchesPlayed, matchesPlayed, Colors.blue),
+  //     ],
+  //   );
+  // }
 
   Widget _buildProgressBar(String label, int value, int total, Color color) {
     return Padding(

@@ -38,7 +38,7 @@ class _GameJoiningPageState extends State<GameJoiningPage> {
           "Game Details",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         centerTitle: true,
         elevation: 2,
       ),

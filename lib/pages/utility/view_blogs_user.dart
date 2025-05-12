@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class BlogsScreen extends StatelessWidget {
-  const BlogsScreen({super.key});
+class BlogsScreens extends StatelessWidget {
+  const BlogsScreens({super.key});
   final Color backgroundGrey = const Color(0xFFF5F5F5);
 
   @override
@@ -35,7 +35,7 @@ class BlogsScreen extends StatelessWidget {
       backgroundColor: backgroundGrey,
       appBar: AppBar(
         title: const Text("Blogs"),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
       ),
       body: ListView.builder(
         padding:

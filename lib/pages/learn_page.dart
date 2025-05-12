@@ -27,7 +27,7 @@ class _LearningScreenState extends State<LearningScreen> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         elevation: 0,
         title: const Text(
           "Let's Grow",
@@ -72,14 +72,14 @@ class _LearningScreenState extends State<LearningScreen> {
             SizedBox(height: isSmallScreen ? 20 : 30), // Responsive spacing
             Align(
               alignment: Alignment.center,
-              child: Text(
-                "TUTORIALS",
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 20 : 22, // Responsive font size
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
+              // child: Text(
+              //   "TUTORIALS",
+              //   style: TextStyle(
+              //     fontSize: isSmallScreen ? 20 : 22, // Responsive font size
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey,
+              //   ),
+              // ),
             ),
             SizedBox(height: isSmallScreen ? 20 : 30), // Responsive spacing
 

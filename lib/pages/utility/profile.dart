@@ -9,6 +9,7 @@ import 'package:sportify_final/pages/utility/api_constants.dart';
 import 'package:sportify_final/pages/utility/role_page.dart';
 import 'package:sportify_final/pages/utility/view_all_booking.dart';
 import 'package:sportify_final/pages/utility/view_all_games.dart';
+import 'package:sportify_final/pages/utility/view_blogs_user.dart';
 import 'dart:io';
 
 import 'package:sportify_final/pages/utility/view_profile.dart';
@@ -103,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         elevation: 0,
       ),
       body: Column(
@@ -167,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 }),
                 _buildMenuItem(Icons.article, "Blogs", () {
                   Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => BlogsScreen()));
+                      MaterialPageRoute(builder: (context) => BlogsScreens()));
                 }),
                 _buildMenuItem(Icons.settings, "Settings", () {
                   Navigator.push(context,

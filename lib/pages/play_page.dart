@@ -444,7 +444,7 @@ class _PlayPageState extends State<PlayPage> {
       child: Scaffold(
         backgroundColor: backgroundGrey,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.green,
           title: const Text(
             "Let's Play",
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -472,7 +472,7 @@ class _PlayPageState extends State<PlayPage> {
           ],
           bottom: TabBar(
             indicatorColor: Colors.green,
-            labelColor: Colors.green,
+            labelColor: Colors.white,
             unselectedLabelColor: Colors.black,
             tabs: [
               Tab(text: "Games"),
@@ -662,7 +662,8 @@ class _PlayPageState extends State<PlayPage> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.green,
-                                Colors.purpleAccent.shade200
+                                Colors.green
+                                //  Colors.purpleAccent.shade200
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

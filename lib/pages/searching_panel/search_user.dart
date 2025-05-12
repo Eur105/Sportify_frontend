@@ -149,7 +149,7 @@ class _SearchUsersPageState extends State<SearchUsersPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search Users'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
       ),
       body: Column(
         children: [

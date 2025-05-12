@@ -91,6 +91,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.green,
         title: widget.isGroup
             ? Row(
                 children: [
@@ -129,14 +130,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         actions: [
           if (widget.isGroup)
             IconButton(
-              icon: const Icon(Icons.group),
+              icon: const Icon(
+                Icons.group,
+                color: Colors.black,
+              ),
               onPressed: () {
                 // Show group members
                 _showGroupMembers();
               },
             ),
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.black,
+            ),
             onPressed: () {
               // Show more options
               _showOptions();

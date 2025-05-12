@@ -81,10 +81,26 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       // Sort both lists by timestamp (latest on top)
-      tempDms.sort(
-          (a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp']));
-      tempGroups.sort(
-          (a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp']));
+      tempDms.sort((a, b) {
+        final aTimestamp = a['timestamp'];
+        final bTimestamp = b['timestamp'];
+
+        if (aTimestamp == null && bTimestamp == null) return 0;
+        if (aTimestamp == null) return 1; // put nulls at bottom
+        if (bTimestamp == null) return -1;
+
+        return (bTimestamp as Timestamp).compareTo(aTimestamp as Timestamp);
+      });
+      tempGroups.sort((a, b) {
+        final aTimestamp = a['timestamp'];
+        final bTimestamp = b['timestamp'];
+
+        if (aTimestamp == null && bTimestamp == null) return 0;
+        if (aTimestamp == null) return 1; // put nulls at bottom
+        if (bTimestamp == null) return -1;
+
+        return (bTimestamp as Timestamp).compareTo(aTimestamp as Timestamp);
+      });
 
       setState(() {
         dms = tempDms;
@@ -141,7 +157,7 @@ class _ChatPageState extends State<ChatPage> {
                 'message': chatData['lastMessage'] ?? 'Start a conversation',
                 'photoUrl': userData['photoUrl'] ?? '',
                 'timestamp': chatData['lastMessageTime'],
-                'unreadCount': unread
+                'unreadCount': chatData['unreadCounts']?[currentUserId] ?? 0,
               });
             }
           }
@@ -192,61 +208,65 @@ class _ChatPageState extends State<ChatPage> {
         .snapshots();
   }
 
-  Stream<QuerySnapshot> getChatMessages(String chatId) {
-    return FirebaseFirestore.instance
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .orderBy('timestamp', descending: true)
-        .limit(50)
-        .snapshots();
-  }
+  // Stream<QuerySnapshot> getChatMessages(String chatId) {
+  //   return FirebaseFirestore.instance
+  //       .collection('chats')
+  //       .doc(chatId)
+  //       .collection('messages')
+  //       .orderBy('timestamp', descending: true)
+  //       .limit(50)
+  //       .snapshots();
+  // }
 
-  Future<void> sendMessage() async {
-    if (messageController.text.isNotEmpty && currentChatId.isNotEmpty) {
-      try {
-        // Create message data
-        final messageData = {
-          'senderId': currentUserId,
-          'text': messageController.text,
-          'timestamp': FieldValue.serverTimestamp(),
-          'read': false,
-        };
+  // Future<void> sendMessage() async {
+  //   if (messageController.text.isNotEmpty && currentChatId.isNotEmpty) {
+  //     try {
+  //       // Create message data
+  //       final messageData = {
+  //         'senderId': currentUserId,
+  //         'text': messageController.text,
+  //         'timestamp': FieldValue.serverTimestamp(),
+  //         'read': false,
+  //       };
 
-        // Add message to subcollection
-        await FirebaseFirestore.instance
-            .collection('chats')
-            .doc(currentChatId)
-            .collection('messages')
-            .add(messageData);
+  //       // Add message to subcollection
+  //       await FirebaseFirestore.instance
+  //           .collection('chats')
+  //           .doc(currentChatId)
+  //           .collection('messages')
+  //           .add(messageData);
 
-        // Update the last message in the chat document
-        await FirebaseFirestore.instance
-            .collection('chats')
-            .doc(currentChatId)
-            .update({
-          'lastMessage': messageController.text,
-          'lastMessageTime': FieldValue.serverTimestamp(),
-        });
+  //       // Update the last message in the chat document
+  //       await FirebaseFirestore.instance
+  //           .collection('chats')
+  //           .doc(currentChatId)
+  //           .update({
+  //         'lastMessage': messageController.text,
+  //         'lastMessageTime': FieldValue.serverTimestamp(),
+  //       });
 
-        messageController.clear();
-      } catch (e) {
-        print('Error sending message: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send message: $e')),
-        );
-      }
-    } else {
-      if (currentChatId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a chat first')),
-        );
-      }
-    }
-  }
+  //       messageController.clear();
+  //     } catch (e) {
+  //       print('Error sending message: $e');
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Failed to send message: $e')),
+  //       );
+  //     }
+  //   } else {
+  //     if (currentChatId.isEmpty) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Please select a chat first')),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> createNewDm(String otherUserId, String otherUserName) async {
     try {
+      if (currentUserId == null) {
+        throw Exception("Current user ID is null.");
+      }
+
       // Check if chat already exists
       final querySnapshot = await FirebaseFirestore.instance
           .collection('chats')
@@ -265,13 +285,13 @@ class _ChatPageState extends State<ChatPage> {
         }
       }
 
-      // Initialize unreadCounts map
+      // Initialize unreadCounts
       Map<String, int> unreadCounts = {
         currentUserId!: 0,
         otherUserId: 0,
       };
 
-      // Create a new chat
+      // Create new chat
       DocumentReference chatRef =
           await FirebaseFirestore.instance.collection('chats').add({
         'type': 'direct',
@@ -282,13 +302,16 @@ class _ChatPageState extends State<ChatPage> {
         'unreadCounts': unreadCounts,
       });
 
+      final createdChat = await chatRef.get();
+      final chatData = createdChat.data() as Map<String, dynamic>;
+
       setState(() {
         currentChatId = chatRef.id;
         dms.add({
           'id': chatRef.id,
           'name': otherUserName,
-          'message': 'New conversation started',
-          'timestamp': Timestamp.now(),
+          'message': chatData['lastMessage'],
+          'timestamp': chatData['lastMessageTime'] ?? DateTime.now(),
         });
       });
     } catch (e) {
@@ -514,14 +537,17 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         title: const Text(
           "Let's Connect",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(
+              Icons.search,
+              color: Colors.black,
+            ),
             onPressed: () {
               // Navigate to the search page (previously in the search bar)
               Navigator.push(
@@ -535,7 +561,10 @@ class _ChatPageState extends State<ChatPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: const Icon(
+              Icons.notifications,
+              color: Colors.black,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -544,7 +573,10 @@ class _ChatPageState extends State<ChatPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: const Icon(
+              Icons.person,
+              color: Colors.black,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -693,7 +725,9 @@ class _ChatPageState extends State<ChatPage> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (chatData[index]['unreadCount'] > 0)
+                      // Add null check for unreadCount
+                      if (chatData[index]['unreadCount'] != null &&
+                          chatData[index]['unreadCount'] > 0)
                         Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: CircleAvatar(

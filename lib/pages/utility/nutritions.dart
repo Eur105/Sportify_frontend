@@ -13,8 +13,12 @@ class NutritionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Nutrition Guide"),
+        backgroundColor: Colors.green,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+          ),
           onPressed: () {
             Navigator.pop(context); // Goes back to Tutorials
           },

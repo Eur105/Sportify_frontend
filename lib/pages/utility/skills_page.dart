@@ -128,6 +128,7 @@ class SkillsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Skills & Tutorials"),
+        backgroundColor: Colors.green,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {

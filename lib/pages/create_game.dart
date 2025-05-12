@@ -259,7 +259,7 @@ class _CreateGameState extends State<CreateGame> {
       appBar: AppBar(
         title: const Text('Create Game',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         elevation: 2,
         iconTheme: const IconThemeData(color: Colors.black),
         centerTitle: true,

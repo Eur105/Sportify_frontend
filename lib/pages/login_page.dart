@@ -174,191 +174,194 @@ class _LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenWidth < 600; // Adjust breakpoint as needed
 
     return Scaffold(
-      // appBar: AppBar(
-      //     leading: IconButton(
-      //   icon: Icon(Icons.arrow_back), // Back arrow icon
-      //   onPressed: () {
-      //     Navigator.pop(context); // Navigates to the previous screen
-      //   },
-      // )),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          // Add SingleChildScrollView for scrolling on smaller screens
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                    top: isSmallScreen ? 50 : 70, // Adjust top padding
-                    left: isSmallScreen ? 30 : 70, // Adjust left padding
-                    right: isSmallScreen ? 30 : 70), // Adjust right padding
-                child: Text(
-                  "Hi, WELCOME BACK!",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSmallScreen ? 18 : 20, // Adjust font size
+      appBar: AppBar(
+          leading: IconButton(
+        icon: Icon(Icons.arrow_back), // Back arrow icon
+        onPressed: () {
+          Navigator.pop(context); // Navigates to the previous screen
+        },
+      )),
+      body: Center(
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            // Add SingleChildScrollView for scrolling on smaller screens
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: isSmallScreen ? 50 : 70, // Adjust top padding
+                      left: isSmallScreen ? 30 : 70, // Adjust left padding
+                      right: isSmallScreen ? 30 : 70), // Adjust right padding
+                  child: Text(
+                    "Hi, WELCOME BACK!",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 18 : 20, // Adjust font size
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: isSmallScreen ? 30 : 40), // Adjust spacing
+                SizedBox(height: isSmallScreen ? 30 : 40), // Adjust spacing
 
-              // Email TextField
-              Padding(
-                padding: EdgeInsets.only(
-                    top: 16,
-                    left: isSmallScreen ? 16 : 20,
-                    right: isSmallScreen ? 16 : 20), // Adjust padding
-                child: TextFormField(
-                  controller: _emailcontroller,
-                  decoration: const InputDecoration(
-                    hintText: "Enter Email",
-                    labelText: "Email",
-                    border: OutlineInputBorder(),
+                // Email TextField
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: 16,
+                      left: isSmallScreen ? 16 : 20,
+                      right: isSmallScreen ? 16 : 20), // Adjust padding
+                  child: TextFormField(
+                    controller: _emailcontroller,
+                    decoration: const InputDecoration(
+                      hintText: "Enter Email",
+                      labelText: "Email",
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return "Email cannot be empty";
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Email cannot be empty";
-                    }
-                    return null;
-                  },
                 ),
-              ),
-              SizedBox(height: 20),
+                SizedBox(height: 20),
 
-              // Password TextField
-              Padding(
-                padding: EdgeInsets.only(
-                    left: isSmallScreen ? 16 : 20,
-                    right: isSmallScreen ? 16 : 20), // Adjust padding
-                child: TextFormField(
-                  controller: _passcontroller,
-                  decoration: InputDecoration(
-                    hintText: "Enter Password",
-                    labelText: "Password",
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                // Password TextField
+                Padding(
+                  padding: EdgeInsets.only(
+                      left: isSmallScreen ? 16 : 20,
+                      right: isSmallScreen ? 16 : 20), // Adjust padding
+                  child: TextFormField(
+                    controller: _passcontroller,
+                    decoration: InputDecoration(
+                      hintText: "Enter Password",
+                      labelText: "Password",
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _passwordVisible = !_passwordVisible;
-                        });
-                      },
+                    ),
+                    obscureText: !_passwordVisible,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return "Password cannot be empty";
+                      } else if (value.length < 6) {
+                        return "Password must be at least 6 characters long";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Remember me checkbox and Forgot Password
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _rememberMe = value!;
+                          });
+                        },
+                      ),
+                      const Text(
+                        "Remember me",
+                        style: TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ForgotPass()),
+                          );
+                        },
+                        child: const Text("Forgot password?"),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // Login Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : () => moveToHome(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              "Login",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize:
+                                    isSmallScreen ? 16 : 18, // Adjust font size
+                              ),
+                            ),
                     ),
                   ),
-                  obscureText: !_passwordVisible,
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Password cannot be empty";
-                    } else if (value.length < 6) {
-                      return "Password must be at least 6 characters long";
-                    }
-                    return null;
-                  },
                 ),
-              ),
-              SizedBox(height: 20),
+                SizedBox(height: isSmallScreen ? 30 : 40), // Adjust spacing
 
-              // Remember me checkbox and Forgot Password
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
+                // Signup navigation
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _rememberMe = value!;
-                        });
-                      },
-                    ),
                     const Text(
-                      "Remember me",
+                      "Don't have an account?",
                       style: TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
                     ),
-                    const Spacer(),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ForgotPass()),
+                          MaterialPageRoute(builder: (context) => SignupPage()),
                         );
                       },
-                      child: const Text("Forgot password?"),
+                      child: const Text(
+                        "Signup",
+                        style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                      ),
                     ),
                   ],
-                ),
-              ),
-
-              SizedBox(height: 20),
-
-              // Login Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : () => moveToHome(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize:
-                                  isSmallScreen ? 16 : 18, // Adjust font size
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-              SizedBox(height: isSmallScreen ? 30 : 40), // Adjust spacing
-
-              // Signup navigation
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Don't have an account?",
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignupPage()),
-                      );
-                    },
-                    child: const Text(
-                      "Signup",
-                      style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
-                    ),
-                  ),
-                ],
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

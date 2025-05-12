@@ -133,6 +133,7 @@ class _ViewAllBookingState extends State<ViewAllBooking> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.green,
         title: const Text(
           "My Venue Bookings",
           style: TextStyle(fontWeight: FontWeight.bold),

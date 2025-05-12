@@ -105,8 +105,12 @@ Key Points:
     return Scaffold(
       appBar: AppBar(
         title: const Text("Rules & Regulations"),
+        backgroundColor: Colors.green,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+          ),
           onPressed: () {
             Navigator.pop(context); // Returns to Tutorials grid
           },

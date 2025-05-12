@@ -54,6 +54,7 @@ class _SportFilterPageState extends State<SportFilterPage> {
           "Filter Games",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        backgroundColor: Colors.green,
         centerTitle: true,
       ),
       body: Padding(

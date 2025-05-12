@@ -316,7 +316,7 @@ class _BookingPageState extends State<BookingPage> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         title: const Text(
           'Venue Booking',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -328,14 +328,20 @@ class _BookingPageState extends State<BookingPage> {
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => NotificationPage()));
             },
-            icon: const Icon(Icons.notifications),
+            icon: const Icon(
+              Icons.notifications,
+              color: Colors.black,
+            ),
           ),
           IconButton(
             onPressed: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => ProfilePage()));
             },
-            icon: const Icon(Icons.person),
+            icon: const Icon(
+              Icons.person,
+              color: Colors.black,
+            ),
           ),
         ],
       ),

@@ -94,6 +94,7 @@ class _ViewUserGamesState extends State<ViewUserGames> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.green,
         title: const Text(
           "My Created Games",
           style: TextStyle(fontWeight: FontWeight.bold),

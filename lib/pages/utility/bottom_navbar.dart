@@ -20,7 +20,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      color: backgroundGrey,
+      color: Colors.green,
       child: SafeArea(
         // Added SafeArea to avoid overflow
         child: Padding(
@@ -87,7 +87,11 @@ class _BottomNavbarState extends State<BottomNavbar> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 22), // slightly smaller icon
+              Icon(
+                icon,
+                size: 26,
+                color: Colors.black,
+              ), // slightly smaller icon
               SizedBox(height: 2),
               Text(
                 label,

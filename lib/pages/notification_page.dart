@@ -188,7 +188,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: backgroundGrey,
+        backgroundColor: Colors.green,
         title: const Text(
           "Game Requests",
           style: TextStyle(
@@ -200,7 +200,10 @@ class _NotificationPageState extends State<NotificationPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.black,
+            ),
             onPressed: _fetchGameRequests,
             tooltip: "Refresh Requests",
           ),

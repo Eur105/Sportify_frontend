@@ -16,6 +16,7 @@ import 'package:sportify_final/pages/utility/profile.dart';
 //import 'package:sportify_final/pages/utility/location_service.dart'; // Import location service
 //import 'package:sportify_final/pages/utility/location_appbar_widget.dart'; // Import location widget
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:sportify_final/pages/utility/usermanage.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -80,6 +81,7 @@ class _HomepageState extends State<Homepage> {
         );
       }
     });
+    UserManager.loadUserId();
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('Message received: ${message}');
@@ -128,7 +130,7 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         title: Align(
           alignment: Alignment.centerLeft,
           child: LocationAppBarWidget(
@@ -147,7 +149,10 @@ class _HomepageState extends State<Homepage> {
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
             },
-            icon: Icon(Icons.notifications),
+            icon: Icon(
+              Icons.notifications,
+              color: Colors.black,
+            ),
           ),
           IconButton(
             onPressed: () {
@@ -156,7 +161,10 @@ class _HomepageState extends State<Homepage> {
                 MaterialPageRoute(builder: (context) => ProfilePage()),
               );
             },
-            icon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person,
+              color: Colors.black,
+            ),
           ),
         ],
       ),
