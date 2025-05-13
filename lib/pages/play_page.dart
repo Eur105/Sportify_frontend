@@ -449,7 +449,10 @@ class _PlayPageState extends State<PlayPage> {
             "Let's Play",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          elevation: 0,
+          elevation: 4,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+          ),
           actions: [
             IconButton(
               onPressed: () {
@@ -663,8 +666,7 @@ class _PlayPageState extends State<PlayPage> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.green,
-                                Colors.green
-                                //  Colors.purpleAccent.shade200
+                                Colors.purpleAccent.shade200
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -1018,8 +1020,7 @@ class _PlayPageState extends State<PlayPage> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.green,
-                                Colors.green
-                                // Colors.purpleAccent.shade200,
+                                Colors.purpleAccent.shade200,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

@@ -394,8 +394,15 @@ class GameCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 ElevatedButton.icon(
                   onPressed: () => _confirmCancelGame(context, game['uuid']),
-                  icon: const Icon(Icons.cancel_outlined, size: 18),
-                  label: const Text("Cancel"),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    size: 18,
+                    color: Colors.black,
+                  ),
+                  label: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.black),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent.shade200,
                     shape: RoundedRectangleBorder(

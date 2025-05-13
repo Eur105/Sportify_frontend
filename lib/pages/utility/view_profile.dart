@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_declarations
+// ignore_for_file: prefer_const_constructors, prefer_const_declarations, unused_import, unused_element
 
 import 'dart:convert';
 import 'dart:io';
@@ -227,7 +227,7 @@ class _ViewProfileState extends State<ViewProfile> {
                   _buildInfoCard(Icons.location_on, "Address", address!),
                   SizedBox(
                       height: isSmallScreen ? 12 : 16), // Responsive spacing
-                  _buildDivider(),
+                  //  _buildDivider(),
                   SizedBox(
                       height: isSmallScreen ? 12 : 16), // Responsive spacing
                   // _buildGameStatsSection(),

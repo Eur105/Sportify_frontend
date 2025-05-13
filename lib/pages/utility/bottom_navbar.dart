@@ -20,7 +20,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      color: Colors.green,
+      color: Colors.white,
       child: SafeArea(
         // Added SafeArea to avoid overflow
         child: Padding(

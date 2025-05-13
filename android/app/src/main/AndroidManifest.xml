@@ -14,7 +14,7 @@
 
 
     <application
-        android:label="sportify_final"
+        android:label="Sportify"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, avoid_print, prefer_const_constructors, unnecessary_string_interpolations, prefer_const_declarations
+// ignore_for_file: use_build_context_synchronously, avoid_print, prefer_const_constructors, unnecessary_string_interpolations, prefer_const_declarations, unused_import
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;

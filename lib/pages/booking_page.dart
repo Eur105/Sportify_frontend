@@ -9,6 +9,7 @@ import 'package:sportify_final/pages/notification_page.dart';
 import 'package:sportify_final/pages/utility/api_constants.dart';
 import 'package:sportify_final/pages/utility/bottom_navbar.dart';
 import 'package:sportify_final/pages/utility/profile.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookingPage extends StatefulWidget {
   const BookingPage({Key? key}) : super(key: key);
@@ -35,6 +36,12 @@ class _BookingPageState extends State<BookingPage> {
     "spiritfield ground"
   ];
   List<String> timeSlots = ["9 AM to 11 AM", "1 PM - 3 PM", "5 PM - 7 PM"];
+
+  final Map<String, String> venueMapLinks = {
+    "Umar Minhas futsal ground": "https://maps.app.goo.gl/YmzxqZSsz5dpi66k9",
+    "Kokan ground": "https://maps.app.goo.gl/zWmz71W5qXUT7rMt9",
+    "spiritfield ground": "https://maps.app.goo.gl/BEH8GEueQTcC82g49",
+  };
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -314,7 +321,7 @@ class _BookingPageState extends State<BookingPage> {
     final isSmallScreen = screenWidth < 600; // Adjust breakpoint as needed
 
     return Scaffold(
-      backgroundColor: backgroundGrey,
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
         backgroundColor: Colors.green,
         title: const Text(
@@ -322,6 +329,10 @@ class _BookingPageState extends State<BookingPage> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
         actions: [
           IconButton(
             onPressed: () {
@@ -349,117 +360,174 @@ class _BookingPageState extends State<BookingPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Text("Book a Venue",
-                    style: TextStyle(
-                        fontSize: isSmallScreen ? 18 : 22,
-                        fontWeight: FontWeight.bold)),
-              ),
-              SizedBox(height: isSmallScreen ? 15 : 20), // Responsive spacing
-              TextField(
-                controller: dateController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: "Select Date",
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _selectDate),
+              Text(
+                "Book a Venue",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 20 : 26,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: isSmallScreen ? 15 : 20), // Responsive spacing
-              DropdownButtonFormField<String>(
-                value:
-                    venueController.text.isEmpty ? null : venueController.text,
-                items: venues.map((venue) {
-                  return DropdownMenuItem(
-                    value: venue,
-                    child: Text(venue),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    venueController.text = value ?? "";
-
-                    // Set price based on selected venue
-                    if (value == "Umar Minhas futsal ground") {
-                      priceController.text = "5000";
-                    } else if (value == "Kokan ground") {
-                      priceController.text = "4000";
-                    } else if (value == "spiritfield ground") {
-                      priceController.text = "3500";
-                    } else {
-                      priceController.text = "";
-                    }
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: "Select Venue",
-                  border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              SizedBox(height: isSmallScreen ? 15 : 20),
-
-              TextField(
-                controller: priceController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: "Price per Hour",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              SizedBox(height: isSmallScreen ? 15 : 20),
-              // Responsive spacing
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: startTimeController,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Start Time',
-                        border: OutlineInputBorder(),
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: dateController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: "Select Date",
+                          prefixIcon: const Icon(Icons.date_range),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: IconButton(
+                              icon: const Icon(Icons.calendar_today),
+                              onPressed: _selectDate),
+                        ),
                       ),
-                      onTap: () =>
-                          _selectTime(context, startTimeController, "start"),
-                    ),
-                  ),
-                  SizedBox(width: isSmallScreen ? 8 : 10), // Responsive spacing
-                  Expanded(
-                    child: TextFormField(
-                      controller: endTimeController,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'End Time',
-                        border: OutlineInputBorder(),
-                      ),
-                      onTap: () =>
-                          _selectTime(context, endTimeController, "end"),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: isSmallScreen ? 25 : 30), // Responsive spacing
-              Center(
-                child: isBooking
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _bookVenue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: EdgeInsets.symmetric(
-                            vertical: 15,
-                            horizontal: isSmallScreen ? 30 : 50,
+                      const SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        value: venueController.text.isEmpty
+                            ? null
+                            : venueController.text,
+                        items: venues.map((venue) {
+                          return DropdownMenuItem(
+                            value: venue,
+                            child: Text(venue),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            venueController.text = value ?? "";
+                            if (value == "Umar Minhas futsal ground") {
+                              priceController.text = "5000";
+                            } else if (value == "Kokan ground") {
+                              priceController.text = "4000";
+                            } else if (value == "spiritfield ground") {
+                              priceController.text = "3500";
+                            } else {
+                              priceController.text = "";
+                            }
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Select Venue",
+                          prefixIcon: const Icon(Icons.sports_soccer),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          "Book Venue",
-                          style: TextStyle(color: Colors.white),
+                      ),
+                      if (venueController.text.isNotEmpty)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () async {
+                              final url = venueMapLinks[venueController.text];
+                              if (url != null &&
+                                  await canLaunchUrl(Uri.parse(url))) {
+                                await launchUrl(Uri.parse(url),
+                                    mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            icon: const Icon(Icons.map, color: Colors.green),
+                            label: const Text("View on Map"),
+                          ),
+                        ),
+                      if (venueController.text.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 16, bottom: 12),
+                          height: 150,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: AssetImage(
+                                  "assets/picture/${venueController.text.toLowerCase().replaceAll(' ', '_')}.jpg"),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      TextField(
+                        controller: priceController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: "Price per Hour",
+                          // prefixIcon: const Icon(Icons.attach_money),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: startTimeController,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                labelText: 'Start Time',
+                                prefixIcon: const Icon(Icons.access_time),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onTap: () => _selectTime(
+                                  context, startTimeController, "start"),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextFormField(
+                              controller: endTimeController,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                labelText: 'End Time',
+                                prefixIcon: const Icon(Icons.access_time),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onTap: () => _selectTime(
+                                  context, endTimeController, "end"),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 25),
+                      Center(
+                        child: isBooking
+                            ? const CircularProgressIndicator()
+                            : ElevatedButton(
+                                onPressed: _bookVenue,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30)),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 15,
+                                    horizontal: isSmallScreen ? 30 : 50,
+                                  ),
+                                  elevation: 4,
+                                ),
+                                child: const Text(
+                                  "Book Venue",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

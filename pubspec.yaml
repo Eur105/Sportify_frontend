@@ -50,6 +50,7 @@ dependencies:
   supabase_flutter: ^2.9.0
   path: ^1.9.1
   uuid: ^4.5.1
+  flutter_launcher_icons: ^0.14.3
   #firebase_core: ^2.24.2
   
   #firebase_messaging: ^15.2.4
@@ -63,6 +64,8 @@ dependencies:
   firebase_messaging: ^15.1.0
   firebase_auth: ^5.1.0
   firebase_storage: ^12.1.0
+
+  
   
 
 dev_dependencies:
@@ -75,6 +78,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -119,3 +123,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/picture/app_icon.jpg" # <- path to your logo image
+

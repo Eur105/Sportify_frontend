@@ -157,8 +157,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       backgroundColor: widget.backgroundGrey,
       appBar: AppBar(
-        title: const Text("Reset Password"),
-        backgroundColor: Colors.white,
+        title: const Text(
+          "Reset Password",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+        centerTitle: true,
       ),
       body: Padding(
         padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),

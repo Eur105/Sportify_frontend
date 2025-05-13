@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_conditional_assignment, unnecessary_null_comparison, avoid_print
+// ignore_for_file: prefer_conditional_assignment, unnecessary_null_comparison, avoid_print, unused_local_variable
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:firebase_auth/firebase_auth.dart';

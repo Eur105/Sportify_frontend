@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, avoid_print, unnecessary_brace_in_string_interps
+// ignore_for_file: prefer_const_constructors, unused_local_variable, avoid_print, unnecessary_brace_in_string_interps, unused_field
 
 import 'dart:async';
 
@@ -54,17 +54,17 @@ class _HomepageState extends State<Homepage> {
     _pageController = PageController(viewportFraction: 0.9);
     _promoCards = [
       {
-        'image': 'assets/picture/venue1.jpg',
+        'image': 'assets/picture/umar_minhas_futsal_ground.jpg',
         'title': 'Turf Arena',
         'offer': '20% off on weekday slots!',
       },
       {
-        'image': 'assets/picture/venue2.jpg',
+        'image': 'assets/picture/kokan_ground.jpg',
         'title': 'Elite Sports Club',
         'offer': 'Free drink with night booking 🍹',
       },
       {
-        'image': 'assets/picture/venue3.jpg',
+        'image': 'assets/picture/spiritfield_ground.jpg',
         'title': 'Greenfield Ground',
         'offer': 'First booking free!',
       },
@@ -137,6 +137,10 @@ class _HomepageState extends State<Homepage> {
             key: _locationWidgetKey,
             onLocationChanged: _updateLocationInfo,
           ),
+        ),
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         titleSpacing: 0,
         leadingWidth: 0, // Remove default leading spacing
@@ -234,7 +238,7 @@ class _HomepageState extends State<Homepage> {
               child: Column(
                 children: [
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),

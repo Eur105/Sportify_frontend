@@ -28,10 +28,13 @@ class _LearningScreenState extends State<LearningScreen> {
       backgroundColor: backgroundGrey,
       appBar: AppBar(
         backgroundColor: Colors.green,
-        elevation: 0,
         title: const Text(
           "Let's Grow",
           style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         actions: [
           IconButton(
@@ -60,15 +63,31 @@ class _LearningScreenState extends State<LearningScreen> {
         child: Column(
           children: [
             SizedBox(height: isSmallScreen ? 10 : 20), // Responsive spacing
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                "LEARN FROM THE PROFESSIONALS",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSmallScreen ? 18 : 20), // Responsive font size
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "👨‍🏫 Learn Like a Pro!",
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 22 : 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Text(
+                  //   "Watch tutorials, master techniques, and stay match-ready.",
+                  //   style: TextStyle(
+                  //     fontSize: isSmallScreen ? 14 : 16,
+                  //     color: Colors.black54,
+                  //   ),
+                  // ),
+                ],
               ),
             ),
+
             SizedBox(height: isSmallScreen ? 20 : 30), // Responsive spacing
             Align(
               alignment: Alignment.center,
