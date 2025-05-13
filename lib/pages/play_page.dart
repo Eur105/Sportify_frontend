@@ -608,8 +608,9 @@ class _PlayPageState extends State<PlayPage> {
                     context,
                     MaterialPageRoute(builder: (context) => SportFilterPage()),
                   ).then((filters) {
-                    if (filters != null && filters is Map<String, String>) {
-                      _searchGames(filters); // Send full filters to the API
+                    if (filters != null && filters is Map<String, dynamic>) {
+                      _searchGames(filters.map(
+                          (key, value) => MapEntry(key, value.toString())));
                     }
                   });
                 },
@@ -966,9 +967,9 @@ class _PlayPageState extends State<PlayPage> {
                     context,
                     MaterialPageRoute(builder: (context) => SportFilterPage()),
                   ).then((filters) {
-                    if (filters != null && filters is Map<String, String>) {
-                      _searchPrivateGames(
-                          filters); // Send full filters to the API
+                    if (filters != null && filters is Map<String, dynamic>) {
+                      _searchPrivateGames(filters.map(
+                          (key, value) => MapEntry(key, value.toString())));
                     }
                   });
                 },

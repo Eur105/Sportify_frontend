@@ -84,54 +84,31 @@ class _LearningScreenState extends State<LearningScreen> {
             SizedBox(height: isSmallScreen ? 20 : 30), // Responsive spacing
 
             // Cards arranged in a Grid
-            GridView.count(
-              physics:
-                  const NeverScrollableScrollPhysics(), // Disable GridView scrolling
-              shrinkWrap: true, // Allow GridView to size itself
-              crossAxisCount: isSmallScreen
-                  ? 1
-                  : 2, // 1 column on small screens, 2 on larger
-              mainAxisSpacing: isSmallScreen ? 10 : 20, // Responsive spacing
-              crossAxisSpacing: isSmallScreen ? 10 : 20, // Responsive spacing
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildCard(
-                  context,
-                  "Nutritions",
-                  "assets/picture/nutritions.jpg",
-                  const NutritionScreen(),
-                ),
-                _buildCard(
-                  context,
-                  "Rules",
-                  "assets/picture/rules.jpg",
-                  const RulesPage(),
-                ),
-                _buildCard(
-                  context,
-                  "Gears",
-                  "assets/picture/gears.jpg",
-                  const GearsPage(),
-                ),
-                _buildCard(
-                  context,
-                  "Skills",
-                  "assets/picture/skills.jpg",
-                  const SkillsPage(),
-                ),
-                _buildCard(
-                  context,
-                  "Fouls",
-                  "assets/picture/fouls.jpg",
-                  const FoulsPage(),
-                ),
-                _buildCard(
-                  context,
-                  "Fitness",
-                  "assets/picture/fitness.jpg",
-                  const FitnessPage(),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: GridView.count(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                crossAxisCount:
+                    2, // always show 2 columns (good even for small screens)
+                childAspectRatio: 2 / 2, // smaller height
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: [
+                  _buildCard(context, "Nutritions",
+                      "assets/picture/nutritions.jpg", const NutritionScreen()),
+                  _buildCard(context, "Rules", "assets/picture/rules.jpg",
+                      const RulesPage()),
+                  _buildCard(context, "Gears", "assets/picture/gears.jpg",
+                      const GearsPage()),
+                  _buildCard(context, "Skills", "assets/picture/skills.jpg",
+                      const SkillsPage()),
+                  _buildCard(context, "Fouls", "assets/picture/fouls.jpg",
+                      const FoulsPage()),
+                  _buildCard(context, "Fitness", "assets/picture/fitness.jpg",
+                      const FitnessPage()),
+                ],
+              ),
             ),
           ],
         ),

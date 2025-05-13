@@ -26,6 +26,7 @@ class ChatService {
   //   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   //   currentUserId = prefs.getString("userUuid"); // assuming "uuid" is the key
+
   //   return currentUserId;
   // }
 

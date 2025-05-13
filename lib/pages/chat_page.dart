@@ -39,6 +39,18 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    _loadUserId();
+
+    UserManager.setupPresence();
+  }
+
+  Future<void> _loadUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    currentUserId = prefs.getString("userUuid");
+    print("see uid in chatpage: $currentUserId");
+    ChatService.hello(currentUserId!);
+    print("sent uid in chatpage: $currentUserId");
     chatSubscription = _chatStream().listen((snapshot) async {
       List<Map<String, dynamic>> tempDms = [];
       List<Map<String, dynamic>> tempGroups = [];
@@ -108,17 +120,6 @@ class _ChatPageState extends State<ChatPage> {
       });
     });
 
-    UserManager.setupPresence();
-    _loadUserId();
-  }
-
-  Future<void> _loadUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    currentUserId = prefs.getString("userUuid");
-    print("see uid in chatpage: $currentUserId");
-    ChatService.hello(currentUserId!);
-    print("sent uid in chatpage: $currentUserId");
     loadChats();
 
     // assuming "uuid" is the key
@@ -131,6 +132,8 @@ class _ChatPageState extends State<ChatPage> {
     // int unread = 0;
 
     try {
+      print("Loading chats for user: $currentUserId");
+
       // Get DMs using ChatService
       ChatService.getUserChats(isGroup: false, uid: currentUserId)
           .listen((snapshot) async {
@@ -201,9 +204,10 @@ class _ChatPageState extends State<ChatPage> {
 
   Stream<QuerySnapshot> _chatStream() {
     final userId = currentUserId;
+    print("Stream function uuid: $userId");
     return FirebaseFirestore.instance
         .collection('chats')
-        .where('participants', arrayContains: userId)
+        .where('participants', arrayContains: currentUserId)
         .orderBy('lastMessageTime', descending: true)
         .snapshots();
   }

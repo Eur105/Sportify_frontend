@@ -27,6 +27,7 @@ class _VenueSearchFieldState extends State<VenueSearchField> {
   bool _showDropdown = false;
   double? _selectedLat;
   double? _selectedLon;
+  // ignore: unused_field
   String? _selectedVenueName;
 
   // Debounce timer to avoid excessive API calls
