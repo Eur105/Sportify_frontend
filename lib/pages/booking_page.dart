@@ -33,7 +33,9 @@ class _BookingPageState extends State<BookingPage> {
   List<String> venues = [
     "Umar Minhas futsal ground",
     "Kokan ground",
-    "spiritfield ground"
+    "spiritfield ground",
+    "National Coaching Center",
+    "Imran Khan ground"
   ];
   List<String> timeSlots = ["9 AM to 11 AM", "1 PM - 3 PM", "5 PM - 7 PM"];
 
@@ -41,6 +43,8 @@ class _BookingPageState extends State<BookingPage> {
     "Umar Minhas futsal ground": "https://maps.app.goo.gl/YmzxqZSsz5dpi66k9",
     "Kokan ground": "https://maps.app.goo.gl/zWmz71W5qXUT7rMt9",
     "spiritfield ground": "https://maps.app.goo.gl/BEH8GEueQTcC82g49",
+    "National Coaching Center": "https://maps.app.goo.gl/3A6j2pmeLw5ghB5b8",
+    "Imran Khan ground": "https://maps.app.goo.gl/cxUPVH1484sbWptf8"
   };
 
   Future<void> _selectDate() async {
@@ -412,6 +416,10 @@ class _BookingPageState extends State<BookingPage> {
                               priceController.text = "4000";
                             } else if (value == "spiritfield ground") {
                               priceController.text = "3500";
+                            } else if (value == "National Coaching Center") {
+                              priceController.text = "4500";
+                            } else if (value == "Imran Khan ground") {
+                              priceController.text = "6000";
                             } else {
                               priceController.text = "";
                             }

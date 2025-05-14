@@ -138,7 +138,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
       ).showSnackBar(SnackBar(content: Text("Booking $action successfully")));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to update booking status")),
+        SnackBar(content: Text("Booking already exist at this time")),
       );
     }
   }
@@ -172,7 +172,6 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
                         Text("Venue: ${booking['venueName']}"),
                         Text("Booking Time: ${booking['bookingTime']}"),
                         Text("Date: ${booking['bookingDate'].split('T')[0]}"),
-                        Text("Price: ${booking['totalAmount']}"),
                         SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,

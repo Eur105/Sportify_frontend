@@ -1,14 +1,70 @@
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors, unnecessary_string_interpolations
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 import 'package:sportify_final/pages/admin_panel/blogs_screen.dart';
 import 'package:sportify_final/pages/admin_panel/help_support_screen.dart';
 //import 'package:sportify_final/pages/admin_panel/login_screen.dart';
 import 'package:sportify_final/pages/admin_panel/profile_screen.dart';
+import 'package:sportify_final/pages/utility/api_constants.dart';
 import 'package:sportify_final/pages/utility/role_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Import login screen
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  Future<void> _logout(BuildContext context) async {
+    final String apiUrl = "${ApiConstants.baseUrl}/api/auth/logout";
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? admintoken = prefs.getString('admintoken');
+
+      if (admintoken == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No token found. Please log in again.")),
+        );
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "$admintoken",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // await prefs.clear();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const RolePage()),
+        );
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        await prefs.remove('userUuid');
+        // await prefs.remove('profilePicture');
+        await prefs.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Logout failed: ${response.body}")),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("An error occurred. Please try again.")),
+      );
+      print("Logout Error: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +150,7 @@ class SettingsScreen extends StatelessWidget {
                   );
                 }),
                 _buildMenuItem(Icons.logout, "Log Out", () {
-                  _showLogoutDialog(context);
+                  _logout(context);
                 }),
               ],
             ),
@@ -118,45 +174,6 @@ class SettingsScreen extends StatelessWidget {
         ),
         onTap: onTap,
       ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Confirm Logout"),
-          content: const Text("Are you sure you want to log out?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-              },
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context); // Close the dialog
-
-                // Get SharedPreferences instance
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-
-                // Remove the token
-                await prefs.remove('token');
-
-                // Navigate to RolePage and remove all previous routes
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RolePage()),
-                  (Route<dynamic> route) => false,
-                );
-              },
-              child: const Text("Log Out", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
     );
   }
 }

@@ -268,17 +268,17 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                   ],
                                 ),
                                 SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.attach_money,
-                                        size: 20, color: Colors.grey[700]),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      booking['totalAmount'].toString(),
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ],
-                                ),
+                                // Row(
+                                //   children: [
+                                //     Icon(Icons.attach_money,
+                                //         size: 20, color: Colors.grey[700]),
+                                //     SizedBox(width: 6),
+                                //     Text(
+                                //       booking['totalAmount'].toString(),
+                                //       style: TextStyle(fontSize: 16),
+                                //     ),
+                                //   ],
+                                // ),
                                 if (selectedFilter == 'Confirmed') ...[
                                   SizedBox(height: 12),
                                   Align(

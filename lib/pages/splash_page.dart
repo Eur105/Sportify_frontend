@@ -1,8 +1,11 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, unused_import
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sportify_final/pages/admin_panel/bookings_screen.dart';
+import 'package:sportify_final/pages/admin_panel/dashboard_screen.dart';
+import 'package:sportify_final/pages/admin_panel/pre_board.dart';
 import 'package:sportify_final/pages/homepage.dart';
 import 'package:sportify_final/pages/utility/role_page.dart';
 
@@ -55,10 +58,17 @@ class _SplashPageState extends State<SplashPage>
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    print("Token is : $token");
+    String? admintoken = prefs.getString('admintoken');
 
-    if (token != null && token.isNotEmpty) {
-      // Token exists, navigate to Homepage
+    print("User token: $token");
+    print("Admin token: $admintoken");
+
+    if (admintoken != null && admintoken.isNotEmpty) {
+      // Admin token exists, navigate to AdminHomepage
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const AdminDashboard()));
+    } else if (token != null && token.isNotEmpty) {
+      // User token exists, navigate to Homepage
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const Homepage()),
       );

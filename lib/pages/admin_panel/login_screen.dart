@@ -52,7 +52,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
       if (response.statusCode == 200) {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', responseData['token']);
+        await prefs.setString('admintoken', responseData['token']);
         await prefs.setString('email', emailController.text);
         // Successful login
         ScaffoldMessenger.of(context).showSnackBar(
